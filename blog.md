@@ -49,14 +49,10 @@ The lib/nmatrix/nmatrix_java.rb file further creates a NMatrix class and binds i
 ###Benchmarking
 
 After the first iteration, we benchmarked NMatrix JRuby versus NMatrix CRuby. 
-
-Fig.1. Matrix Addition
-
-Fig.2. Matrix Subtraction
-
-Fig.3. Matrix Multiplication
-
-Fig.4. Matrix Determinant
+![Alt Matrix Addition](./img/add.png?raw=true "Fig.1. Matrix Addition")
+![Alt Matrix Subtraction](./img/sub.png?raw=true "Fig.2. Matrix Subtraction")
+![Alt Matrix Multiplication](./img/mult.png?raw=true "Fig.3. Matrix Multiplication")
+![Alt Matrix Determinant](./img/det.png?raw=true "Fig.4. Matrix Determinant")
 
 NMatrix JRuby doesn’t seem to be RAM friendly as it consumes a lot of RAM as compared to NMatrix-CRuby.
 
@@ -147,17 +143,17 @@ shapeArray = [
 ]
 For shape = [5000,5000] we generate an array of random elements.
 
-RAM size calculation for storing a single matrix of 5,000 * 5,000 elements.
-5000*5000 => 5000/52 * 5000/52
-       => 97*97 blocks * 21.632KB (Since,1 block of 2704 elements takes 21.362KB space.)
+RAM size calculation for storing a single matrix of 5,000 x 5,000 elements.
+5000*5000 => 5000/52 x 5000/52
+       => 97x97 blocks x 21.632KB (Since,1 block of 2704 elements takes 21.362KB space.)
        => 203,535KB=>203MB=> 0.2GB
 
-Real array=>  Three arrays of shape 5,000* 5,000 =>0.2*3 = 0.6GB
-Multiplication => Three matrices of shape 5,000* 5,000 =>0.2*3 = 0.6GB
+Real array=>  Three arrays of shape 5,000 x 5,000 =>0.2 x 3 = 0.6GB
+Multiplication => Three matrices of shape 5,000 x 5,000 =>0.2 x 3 = 0.6GB
 In the process, while using multiplication api, commons math creates its own copy which consumes 0.2gb more
 Memory required at least 1.6gb
 
-Three initializations => 3*0.6GB + 0.6GB => 2.4GB} java copy
+Three initializations => 3 x 0.6GB + 0.6GB => 2.4GB} java copy
 
 Ruby copy would be around 0.6GB }
 This calculation thus requires 3 GB.
@@ -190,7 +186,6 @@ We need to work only in terms of apis provided by Commons-Math.jar
 |math_spec|737|110|598||
 |shortcuts_spec|81|21|60||
 |stat_spec|72|28|54||
-||||||
 
 
 
