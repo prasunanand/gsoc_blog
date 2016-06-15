@@ -49,10 +49,9 @@ The lib/nmatrix/nmatrix_java.rb file further creates a NMatrix class and binds i
 ###Benchmarking
 
 After the first iteration, we benchmarked NMatrix JRuby versus NMatrix CRuby. 
-![Alt Matrix Addition](./img/add.png?raw=true "Fig.1. Matrix Addition")
-![Alt Matrix Subtraction](./img/sub.png?raw=true "Fig.2. Matrix Subtraction")
-![Alt Matrix Multiplication](./img/mult.png?raw=true "Fig.3. Matrix Multiplication")
-![Alt Matrix Determinant](./img/det.png?raw=true "Fig.4. Matrix Determinant")
+![Alt Matrix Addition](./img/iter1/add.png?raw=true "Fig.1. Matrix Addition")
+![Alt Matrix Subtraction](./img/iter1/sub.png?raw=true "Fig.2. Matrix Subtraction")
+![Alt Matrix Multiplication](./img/iter1/mult.png?raw=true "Fig.3. Matrix Multiplication")
 
 NMatrix JRuby doesn’t seem to be RAM friendly as it consumes a lot of RAM as compared to NMatrix-CRuby.
 
@@ -171,7 +170,21 @@ Solution
  
 We need to work only in terms of apis provided by Commons-Math.jar
 
+After 2nd Iteration
+We benchmarked the code after a few improvements. These are the new graphs that we obtained.
 
+![Alt Matrix Addition](./img/iter2/add.png?raw=true "Fig.1. Matrix Addition")
+![Alt Matrix Subtraction](./img/iter2/subt.png?raw=true "Fig.2. Matrix Subtraction")
+![Alt Matrix Multiplication](./img/iter2/mult.png?raw=true "Fig.3. Matrix Multiplication")
+
+Instead of using a separate java class to store NMatrix element we used it directly in nmatrix_java.rb.  Now we don’t load nmatrix.jar.
+Now, we have minimised passing values around to functions. We generate minimum number of copies. So, the JRuby virtual machine doesn’t have to create new copies and the Garbage collector is not upset at all. Thus we see, a great deal of performance boost.
+Autoboxing
+Also passing values means coercing them in the required format. Now we don’t have to worry a lot about coercion of values.
+
+Results
+From the above graphs, we see that for addition and subtraction, NMatrix- JRuby is the clear winner.
+NMatrix- Lapacke is the clear winner in matrix multiplication. NMatrix-Jruby competes closely with NMatrix-MRI. We can still optimize it to perform better.
 
 
 
