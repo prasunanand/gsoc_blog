@@ -280,7 +280,7 @@ Also passing values means coercing them in the required format. Now we don’t h
 
 ###Results
 From the above graphs, we see that for addition and subtraction, NMatrix- JRuby is the clear winner.
-NMatrix- Lapacke is the clear winner in matrix multiplication. NMatrix-Jruby competes closely with NMatrix-MRI. We can still optimize it to perform better. We believe matrix multiplication can be optimized more.
+NMatrix- Lapacke is the clear winner in matrix multiplication. NMatrix-Jruby competes closely with NMatrix-MRI. We can still optimize it to perform better, especially matrix multiplication.
 
 
 ###Tests
