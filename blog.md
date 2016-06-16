@@ -289,6 +289,9 @@ NMatrix- Lapacke is the clear winner in matrix multiplication. NMatrix-Jruby com
 ###Tests
 We used the existing tests for NMatrix-MRI for the development. The program detects on runtime which method to load.
 
+The table given below summarises how many tests succeed currentlyusing NMatrix-jruby.
+
+
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
 |00_nmatrix_spec|188|80|102|6|
