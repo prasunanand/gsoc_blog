@@ -70,8 +70,11 @@ According to Commons Math a BlockRealMatrix is a
 
 "Cache-friendly implementation of RealMatrix using a flat arrays to store square blocks of the matrix.
 This implementation is specially designed to be cache-friendly. Square blocks are stored as small arrays and allow efficient traversal of data both in row major direction and columns major direction, one block at a time. This greatly increases performances for algorithms that use crossed directions loops like multiplication or transposition.
+
 The size of square blocks is a static parameter. It may be tuned according to the cache size of the target computer processor. As a rule of thumbs, it should be the largest value that allows three blocks to be simultaneously cached (this is necessary for example for matrix multiplication). The default value is to use 52x52 blocks which is well suited for processors with 64k L1 cache (one block holds 2704 values or 21632 bytes). This value could be lowered to 36x36 for processors with 32k L1 cache.
+
 The regular blocks represent BLOCK_SIZE x BLOCK_SIZE squares. Blocks at right hand side and bottom side which may be smaller to fit matrix dimensions. The square blocks are flattened in row major order in single dimension arrays which are therefore BLOCK_SIZE2 elements long for regular blocks. The blocks are themselves organized in row major order.
+
 As an example, for a block size of 52x52, a 100x60 matrix would be stored in 4 blocks. Block 0 would be a double[2704] array holding the upper left 52x52 square, block 1 would be a double[416] array holding the upper right 52x8 rectangle, block 2 would be a double[2496] array holding the lower left 48x52 rectangle and block 3 would be a double[384] array holding the lower right 48x8 rectangle.
 The layout complexity overhead versus simple mapping of matrices to java arrays is negligible for small matrices (about 1%). The gain from cache efficiency leads to up to 3-fold improvements for matrices of moderate to large size."
 
