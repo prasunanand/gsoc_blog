@@ -42,7 +42,7 @@ require_relative '../../ext/nmatrix_java/vendor/commons-math3-3.6.1.jar'
 require_relative '../../ext/nmatrix_java/target/nmatrix.jar'
 ```
 
-The lib/nmatrix/nmatrix_java.rb file further creates a NMatrix class and binds it with java backend apis. This file is analogous to ruby_nmatrix.c. NMatrix class is defined along with the methods.
+The lib/nmatrix/nmatrix_java.rb file further creates a NMatrix class and binds it with java backend apis. This file is analogous to ruby_nmatrix.c where NMatrix class is defined along with the methods.
 
 
 
