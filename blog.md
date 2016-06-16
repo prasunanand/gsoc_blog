@@ -7,15 +7,23 @@ With JRuby + Truffle + Graal becoming very fast compared to MRI, a lot of ruby d
 
 This project aims to port NMatrix to JRuby. NMatrix being a huge library; we aim to implement NMatrix on Jruby for dense matrices during the summers. Every feature of NMatrix that has been ported to JRuby will be benchmarked versus NMatrix-CRuby.
 
-In this blog post, I would like to summarise the features that were implemented till now and the benchmarks.
+###Benchmarking
 
+After the first iteration, we benchmarked NMatrix JRuby versus NMatrix CRuby and got some interesting results.
+
+![Alt Matrix Addition](./img/iter1/add.png?raw=true "Fig.1. Matrix Addition")
+![Alt Matrix Subtraction](./img/iter1/subt.png?raw=true "Fig.2. Matrix Subtraction")
+![Alt Matrix Multiplication](./img/iter1/mult.png?raw=true "Fig.3. Matrix Multiplication")
+
+The results were promising but there was a huge scope for improvement. The following sections discuss how we built the new backend and how we optimized it after the first iteration.
 
 ###Creating a new backend
 
-The java backend aims to create a wrapper around Commons Maths. The Apache Commons Mathematics Library is a library of lightweight, self-contained mathematics and statistics components addressing the most common problems not available in the Java programming language or Commons Lang. It has a very good community support. We will be using the Version: 3.6.1
+The java backend aims to create a wrapper around Commons Maths. The Apache Commons Mathematics Library is a library of lightweight, self-contained mathematics and statistics components addressing the most common problems not available in the Java programming language or Commons Lang. It has a very good community support. We used Version: 3.6.1.
 
 Like any other ruby gem with c extensions, the backend code lies within ext/ directory. The new java backend has been placed in ext/nmatrix_java/ directory.
-NMatrix Creation for arbitrary dimension
+
+**NMatrix Creation for arbitrary dimension**
 We started with double dense matrices and as soon as double matrices are completely implemented; we will implement other data-types. The JNMatrix class stores the the NMatrix elements. The elements of a matrix are stored as a flat_array using the ArrayRealVector class provided by Commons Math. ArrayRealVector class provides methods for operations like addition, subtraction and multiplication. The function mapToSelf(Univariate function) maps a function to each element that facilitates using different element-wise operations like sin(), cos(), floor(), ceil().
 
 When we have matrices of two dimensions, we use JNMatrixTwoD class. Whenever a new JNMatrix object is initialised the constructor checks if it is two dimensional. If true a JNMatrixTwoD object is initialised. Now we can operate on 2-D matrices. JNMatrixTwoD wraps Array2DRowRealMatrix and BlockRealMatrix. They store elements of the matrix in row major format. BlockRealMatrix implementation is specially designed to be cache-friendly.Square blocks are stored as small arrays and allow efficient traversal of data both in row major direction and columns major direction, one block at a time. This greatly increases performances for algorithms that use crossed directions loops like multiplication or transposition. 2D double matrices currently support determinants, inverse, isSymmetric? .
@@ -44,14 +52,6 @@ require_relative '../../ext/nmatrix_java/target/nmatrix.jar'
 
 The lib/nmatrix/nmatrix_java.rb file further creates a NMatrix class and binds it with java backend apis. This file is analogous to ruby_nmatrix.c where NMatrix class is defined along with the methods.
 
-
-
-###Benchmarking
-
-After the first iteration, we benchmarked NMatrix JRuby versus NMatrix CRuby. 
-![Alt Matrix Addition](./img/iter1/add.png?raw=true "Fig.1. Matrix Addition")
-![Alt Matrix Subtraction](./img/iter1/subt.png?raw=true "Fig.2. Matrix Subtraction")
-![Alt Matrix Multiplication](./img/iter1/mult.png?raw=true "Fig.3. Matrix Multiplication")
 
 NMatrix JRuby doesn’t seem to be RAM friendly as it consumes a lot of RAM as compared to NMatrix-CRuby.
 
@@ -195,8 +195,6 @@ This calculation thus requires 3 GB.
 
 **Pass by Value and Pass by reference**
 In the current code ,The input array is copied, not referenced at a lot of places. This consumes a lot of memory, upsets the Garbage Collector and slows down the program.
-
-However, the results are promising and seems that we have made some good progress.
 
 
 **Solution**
