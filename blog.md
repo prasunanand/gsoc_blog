@@ -50,19 +50,18 @@ The lib/nmatrix/nmatrix_java.rb file further creates a NMatrix class and binds i
 
 After the first iteration, we benchmarked NMatrix JRuby versus NMatrix CRuby. 
 ![Alt Matrix Addition](./img/iter1/add.png?raw=true "Fig.1. Matrix Addition")
-![Alt Matrix Subtraction](./img/iter1/sub.png?raw=true "Fig.2. Matrix Subtraction")
+![Alt Matrix Subtraction](./img/iter1/subt.png?raw=true "Fig.2. Matrix Subtraction")
 ![Alt Matrix Multiplication](./img/iter1/mult.png?raw=true "Fig.3. Matrix Multiplication")
 
 NMatrix JRuby doesn’t seem to be RAM friendly as it consumes a lot of RAM as compared to NMatrix-CRuby.
 
-For 6GB RAM we can multiply 5000*5000 matrix with a 5000*5000 RAM.
-To multiply a 6,000*6,000 matrix with a 6,000*6,000 matrix we need 10gb ram. 
+For 6GB RAM we can multiply 5000 x 5000 matrix with a 5000 x 5000 RAM.
+To multiply a 6,000 x 6,000 matrix with a 6,000*6,000 matrix we need 10gb ram. 
 
 This is evident that error scales up as we scale up the size. For example initialization of a 6000 by 60000 matrix  takes 9.89 to 13 seconds.
 
-RealMatrix => the type of matrix returned depends on the dimension. Below 2^12 elements (i.e. 4096 elements or 64*64 for a square matrix) which can be stored in a 32kB array,  a Array2DRowRealMatrix} instance is built. Above this threshold a BlockRealMatrix instance is built.
+For a RealMatrix interface, the type of matrix returned depends on the dimension. Below 2^12 elements (i.e. 4096 elements or 64*64 for a square matrix) which can be stored in a 32kB array,  a Array2DRowRealMatrix instance is built. Above this threshold a BlockRealMatrix instance is built.
 
-4092 elements => 32kB
 
 **Block Size**
 In java applications, data is read from and written to disk in units known as blocks. The Block Size property specifies the number of bytes per block.
@@ -79,7 +78,9 @@ The layout complexity overhead versus simple mapping of matrices to java arrays 
 **Initialialization of a matrix in NMatrix-jruby**
 ```ruby
 def initialize
-@nmat= JNMatrix.new(@shape, @elements , "FLOAT32", "DENSE_STORE" )
+  @shape = [shape,shape] unless shape.is_a?(Array)
+  @s = elements
+  @nmat= JNMatrix.new(@shape, @elements , "FLOAT32", "DENSE_STORE" )
 end
 ```
 ```java
@@ -100,30 +101,55 @@ public static RealMatrix createRealMatrix(final int rows, final int columns) {
                 new Array2DRowRealMatrix(rows, columns) : new BlockRealMatrix(rows, columns);
     }
 ```
+Matrix Addition
+```ruby
+def +(other)
+  result = nil
+  if (other.is_a?(NMatrix))
+    #check dimension
+    #check shape
+    if (@dim != other.dim)
+      raise Exception.new("cannot add matrices with different dimension")
+    end
+    #check shape
+  (0...dim).each do |i|
+    if (@shape[i] != other.shape[i])
+      raise Exception.new("cannot add matrices with different shapes");
+    end
+  end
+  resultArray = @nmat.add(other.nmat).to_a
+  result = NMatrix.new(shape, resultArray,  dtype: :int64)
+  else
+  resultArray = @nmat.mapAddToSelf(other).to_a
+  result = NMatrix.new(shape, resultArray,  dtype: :int64)
+  end
+  result
+end
+```
 
 Matrix Multiplication
 ```ruby
 def dot(other)
-    result = nil
-    if (other.is_a?(NMatrix))
-      #check dimension
-      #check shape
-      if (@shape.length!=2 || other.shape.length!=2)
-        raise Exception.new("please convert array to nx1 or 1xn NMatrix first")
-        return nil
-      end
-      if (@shape[1] != other.shape[0])
-        raise Exception.new("incompatible dimensions")
-        return nil
-      end
-      resultArray = @nmat.twoDMat.multiply(other.nmat.twoDMat).to_a
-      newShape= [@shape[0],other.shape[1]]
-      result = NMatrix.new(newShape, resultArray,  dtype: :int64)
-    else
-      raise Exception.new("cannot have dot product with a scalar");
+  result = nil
+  if (other.is_a?(NMatrix))
+    #check dimension
+    #check shape
+    if (@shape.length!=2 || other.shape.length!=2)
+      raise Exception.new("please convert array to nx1 or 1xn NMatrix first")
+      return nil
     end
-    return result;
+    if (@shape[1] != other.shape[0])
+      raise Exception.new("incompatible dimensions")
+      return nil
+    end
+    resultArray = @nmat.twoDMat.multiply(other.nmat.twoDMat).to_a
+    newShape= [@shape[0],other.shape[1]]
+    result = NMatrix.new(newShape, resultArray,  dtype: :int64)
+  else
+    raise Exception.new("cannot have dot product with a scalar");
   end
+  return result;
+end
 ```
 ```java
 public double[] multiply(JNMatrixTwoD other){
@@ -134,36 +160,42 @@ public double[] multiply(JNMatrixTwoD other){
 
 
 Lets take a look at what happens when we benchmark matrix multiplication.
+```ruby
 shapeArray = [
-                  [10,10],[50,50], // array2dRowRealMatrix
-      [100,100],[500,500], 
-                  [1000,1000],[2000,2000],[3000,3000],
-                  [4000,4000],[5000,5000],
-]
+              [10,10],[50,50],                      // array2dRowRealMatrix
+              [100,100],[500,500], 
+              [1000,1000],[2000,2000],[3000,3000],  // BlockRealMatrix
+              [4000,4000],[5000,5000],
+            ]
+```
 For shape = [5000,5000] we generate an array of random elements.
 
 RAM size calculation for storing a single matrix of 5,000 x 5,000 elements.
 5000*5000 => 5000/52 x 5000/52
+
        => 97x97 blocks x 21.632KB (Since,1 block of 2704 elements takes 21.362KB space.)
+
        => 203,535KB=>203MB=> 0.2GB
 
-Real array=>  Three arrays of shape 5,000 x 5,000 =>0.2 x 3 = 0.6GB
-Multiplication => Three matrices of shape 5,000 x 5,000 =>0.2 x 3 = 0.6GB
-In the process, while using multiplication api, commons math creates its own copy which consumes 0.2gb more
-Memory required at least 1.6gb
+Real array=>  Three arrays of shape 5,000 x 5,000 =>0.2 x 3 = 0.6GB.
 
-Three initializations => 3 x 0.6GB + 0.6GB => 2.4GB} java copy
+Multiplication => Three matrices of shape 5,000 x 5,000 =>0.2 x 3 = 0.6GB.
 
-Ruby copy would be around 0.6GB }
+In the process, while using multiplication api, commons math creates its own copy which consumes 0.2gb more.
+Memory required is at least 1.6gb
+
+Three initializations => 3 x 0.6GB + 0.6GB => 2.4GB <= java copy
+
+Ruby copy would be storing the elements => 0.6GB }<= ruby copy
 This calculation thus requires 3 GB.
 
-Pass by Value and Pass by reference
-In the current code ,The input array is copied, not referenced at a lot of places. This consumes a lot of memory and slows down the program.
+** Pass by Value and Pass by reference **
+In the current code ,The input array is copied, not referenced at a lot of places. This consumes a lot of memory, upsets the Garbage Collector and slows down the program.
 
-However, The results are promising and seems that we have made some good progress.
+However, the results are promising and seems that we have made some good progress.
 
 
-Solution
+** Solution **
 
  1. Minimise initializations
  2. Don’t copy again and again
@@ -178,18 +210,80 @@ We benchmarked the code after a few improvements. These are the new graphs that 
 ![Alt Matrix Multiplication](./img/iter2/mult.png?raw=true "Fig.3. Matrix Multiplication")
 
 Instead of using a separate java class to store NMatrix element we used it directly in nmatrix_java.rb.  Now we don’t load nmatrix.jar.
-Now, we have minimised passing values around to functions. We generate minimum number of copies. So, the JRuby virtual machine doesn’t have to create new copies and the Garbage collector is not upset at all. Thus we see, a great deal of performance boost.
-Autoboxing
+```ruby
+def initialize(shape, elements)
+  @shape = [shape,shape] unless shape.is_a?(Array)
+  @s = ArrayRealVector(elements)
+  if shape.length == 2
+    @twoDMat = get_twoDMat(shape,elements)
+  end
+end
+```
+Now there are just two initializations (only 1 if we don't have 2D Matrix). Also, there is less "passing by value" to functions.
+
+Matrix Addition
+```ruby
+def +(other)
+  result = NMatrix.new(:copy)
+  result.shape = @shape
+  if (other.is_a?(NMatrix))
+    #check dimension
+    #check shape
+    if (@dim != other.dim)
+      raise Exception.new("cannot add matrices with different dimension")
+    end
+    #check shape
+    (0...dim).each do |i|
+      if (@shape[i] != other.shape[i])
+        raise Exception.new("cannot add matrices with different shapes");
+      end
+    end
+    result.s = @s.add(other.s)
+  else
+    result.s = @s.mapAddToSelf(other)
+  end
+  result
+end
+```
+
+Matrix Multiplication
+```ruby
+def dot(other)
+  result = nil
+  if (other.is_a?(NMatrix))
+    #check dimension
+    if (@shape.length!=2 || other.shape.length!=2)
+      raise Exception.new("please convert array to nx1 or 1xn NMatrix first")
+      return nil
+    end
+    #check shape
+    if (@shape[1] != other.shape[0])
+      raise Exception.new("incompatible dimensions")
+      return nil
+    end
+    
+    result = NMatrix.new(:copy)
+    result.shape = @shape
+    result.twoDMat = @twoDMat.multiply(other.twoDMat)
+    result.s = ArrayRealVector.new(get_oneDArray(@shape, result.twoDMat.getData()))
+  else
+    raise Exception.new("cannot have dot product with a scalar");
+  end
+  return result;
+end
+```
+
+We generate minimum number of copies. In binary and unary operations, the resultant matrix is initialized as a blank nmatrix. We then just point the result of the operation to the storage. So, the JRuby virtual machine doesn’t have to create new copies and the Garbage collector is not upset at all. Thus we see, a great deal of performance boost.
+###Autoboxing
 Also passing values means coercing them in the required format. Now we don’t have to worry a lot about coercion of values.
 
-Results
+###Results
 From the above graphs, we see that for addition and subtraction, NMatrix- JRuby is the clear winner.
-NMatrix- Lapacke is the clear winner in matrix multiplication. NMatrix-Jruby competes closely with NMatrix-MRI. We can still optimize it to perform better.
-
+NMatrix- Lapacke is the clear winner in matrix multiplication. NMatrix-Jruby competes closely with NMatrix-MRI. We can still optimize it to perform better. We believe matrix multiplication can be optimized more.
 
 
 ###Tests
-
+We used the existing tests for NMatrix-MRI for the development. The program detects on runtime which method to load.
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
 |00_nmatrix_spec|188|80|102|6|
@@ -204,4 +298,4 @@ NMatrix- Lapacke is the clear winner in matrix multiplication. NMatrix-Jruby com
 
 ###Improvements and future work
 Implement solvers for two dimensional matrices and enumerators by the end of mid term and parallely optimize these features.
-After mid-term evaluations, implement complex dtype using FieldRealVector and FieldMatrix followed by other data-types.
+After mid-term evaluations, we will be implementing complex dtype using FieldRealVector and FieldMatrix followed by other data-types.
