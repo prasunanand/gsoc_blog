@@ -171,7 +171,8 @@ shapeArray = [
 For shape = [5000,5000] we generate an array of random elements.
 
 RAM size calculation for storing a single matrix of 5,000 x 5,000 elements.
-5000*5000 => 5000/52 x 5000/52
+      
+          5000*5000 => 5000/52 x 5000/52
 
        => 97x97 blocks x 21.632KB (Since,1 block of 2704 elements takes 21.362KB space.)
 
@@ -189,20 +190,20 @@ Three initializations => 3 x 0.6GB + 0.6GB => 2.4GB <= java copy
 Ruby copy would be storing the elements => 0.6GB }<= ruby copy
 This calculation thus requires 3 GB.
 
-** Pass by Value and Pass by reference **
+**Pass by Value and Pass by reference**
 In the current code ,The input array is copied, not referenced at a lot of places. This consumes a lot of memory, upsets the Garbage Collector and slows down the program.
 
 However, the results are promising and seems that we have made some good progress.
 
 
-** Solution **
+**Solution**
 
  1. Minimise initializations
  2. Don’t copy again and again
  
 We need to work only in terms of apis provided by Commons-Math.jar
 
-After 2nd Iteration
+**After 2nd Iteration**
 We benchmarked the code after a few improvements. These are the new graphs that we obtained.
 
 ![Alt Matrix Addition](./img/iter2/add.png?raw=true "Fig.1. Matrix Addition")
@@ -284,6 +285,7 @@ NMatrix- Lapacke is the clear winner in matrix multiplication. NMatrix-Jruby com
 
 ###Tests
 We used the existing tests for NMatrix-MRI for the development. The program detects on runtime which method to load.
+
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
 |00_nmatrix_spec|188|80|102|6|
