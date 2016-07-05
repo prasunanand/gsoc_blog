@@ -150,10 +150,10 @@ We are getting different results due to boxing. One thing stands out how importa
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
 |Deviance_spec|04|02|02|0|
-|LMM_spec|195|04|191|0|
-|LMM_categorical_data_spec.rb|46|4|42|0|
+|LMM_spec|195|06|189|0|
+|LMM_categorical_data_spec.rb|46|15|31|0|
 |LMMFormula_spec.rb|05|05|0|0|
-|LMM_interaction_effects_spec.rb|82|06|76|0|
+|LMM_interaction_effects_spec.rb|82|21|61|0|
 |matrix_methods_spec.rb|52|40|12|0|
 |ModelSpecification_spec.rb|07|04|03|0|
 |NelderMeadWithConstraints_spec.rb|08|08|0|0|
