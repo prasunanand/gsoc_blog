@@ -184,6 +184,7 @@ This is a **work in progress** now.
 1. **Parallel Gem:** Currently Parallel gem is not supported by JRuby. So, we can't use parallel processing to utilize multiple CPU cores. /example/bootstrap.rb can't be run with parallelism.
 2. **ArrayStoreException:** We are not exactly sure why this occurs currently. We guess it's due to a lot of memory used by arrays. We believe it can be overcome once we optimize NMatrix-JRuby. This issue was previously reported on JRuby [issues](https://github.com/jruby/jruby/issues/2615) page.
 3. **Process.fork not supported:** JRuby currently doesn't support fork. So, we had to run some tests individually which failed while running the entire test file. 
+
 ##**Conclusion:**
 We have successfully ported mixed_models gem to JRuby. All examples (except blog_data.rb and bootstrap.rb) produce correct results. Now we need to optimize the performance of mixed_models gem which will mostly involve optimizing NMatrix-JRuby as real data as blog_example runs out of memory. 
 
