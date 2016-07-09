@@ -1,26 +1,20 @@
 **JRuby port of Mixed-Models**
 -
 ##**Introduction**
-For my GSoC 2016 project of JRuby port of NMatrix, we worked on running other Sciruby gems on JRuby. We started with **mixed-models** gem. 
+For my GSoC 2016 project of JRuby port of NMatrix, we worked on testing NMatrix-JRuby with real-life data. We started with **mixed-models** gem. 
 Mixed models are statistical models which predict the value of a response variable as a result of fixed and random effects. All matrix calculations are performed using the gem **nmatrix**, which has a quite intuitive syntax and contributes to the overall code readability as well.
 
 
-**[Note]:** *Some features of LMM that are provided by Daru gem, won't be available for now .*
 
 
 ## **Mixed Models**
 
 The real motivation for working with JRuby port of Mixed-Models was to work with real-world data. We ran the code from this [blog](http://sciruby.com/blog/2015/08/19/gsoc-2015-mixed-models/) by Alexej Gossman, the author of 'mixed-models' gem which explains using *mixed-models* with some examples, using JRuby. We then compared the results for Ruby-MRI and JRuby.
 
-####**Example1 : Blog_data**
 
-This is a **work in progress** because of the following issues:
-1. mixed_models not supported by latest [daru](https://github.com/agisga/mixed_models/issues/4 .). This issue has been resolved by Alexej.
-2. The program gets stuck at [line 31](https://github.com/agisga/mixed_models/blob/master/examples/blog_data.rb#L31). This is the [message](https://gist.github.com/prasunanand/2b2573c3607b5365654e078a6aabbad6) that I get on interrupt. It still needs to be figured out.
+####**Example1 : LMM**
 
-####**Example2 : LMM**
-
-Next I started running example [***LMM.rb***](https://github.com/agisga/mixed_models/blob/master/examples/LMM.rb). Alexej wrote a blog explaining this example and it can be found [here](http://www.alexejgossmann.com/First-linear-mixed-model-fit/). I ran the example using both ruby and jruby and compared output at every stage. Here I found these issues.
+I started running example [***LMM.rb***](https://github.com/agisga/mixed_models/blob/master/examples/LMM.rb). Alexej wrote a blog explaining this example and it can be found [here](http://www.alexejgossmann.com/First-linear-mixed-model-fit/). I ran the example using both ruby and jruby and compared output at every stage. Here I found these issues.
 
 **Rank of a matrix**
 
@@ -42,12 +36,20 @@ We solved this issue by implementing NMatrix#matrix_solve that is called by meth
       nmatrix = NMatrix.new :copy
       nmatrix.shape = b.shape
       result = []
+      res = []
       (0...b.shape[1]).each do |i|
-        result.concat(self.solve(b.col(i)).s.toArray.to_a)
+        res << self.solve(b.col(i)).s.toArray.to_a
+      end
+      index = 0
+      (0...b.shape[0]).each do |i|
+        (0...b.shape[1]).each do |j|
+          result[index] = res[j][i]
+          index+=1
+        end
       end
       nmatrix.s = ArrayRealVector.new result.to_java :double
-      nmatrix.twoDMat =  MatrixUtils.createRealMatrix 
-                  get_twoDArray(b.shape, result)
+      nmatrix.twoDMat =  MatrixUtils.createRealMatrix get_twoDArray(b.shape, result)
+      
       return nmatrix
     else
       return self.solve b
@@ -86,7 +88,7 @@ Thus, we get the value of y vector same for both cases.
 
  **Cholesky solve throws "singular matrix exception"**
  
-When LMM does optimisation line [5] it calls NelderMead.minimize that uses deviation and autoboxing leads to 0 as element output. Therefore a diagonal matrix gets reduced to a singular matrix and Cholesky solve throws "singular matrix" error [6].
+When LMM does optimisation line [5] it calls NelderMead.minimize that uses deviation; and autoboxing leads to 0 as element output. Therefore a diagonal matrix gets reduced to a singular matrix and Cholesky solve throws "singular matrix" error [6].
 ```ruby
 ...
 model_fit = LMM.new(x: x, y: y, zt: z.transpose,
@@ -95,8 +97,7 @@ model_fit = LMM.new(x: x, y: y, zt: z.transpose,
                     &parametrization) 
 ...
 ```
-Here z.transpose is wrong due to boxing
-So, we used 
+Here z.transpose is wrong due to boxing. So, we used 
 ```ruby
 zt = (z*5).transpose/5
 ```
@@ -106,6 +107,7 @@ model_fit = LMM.new(x: x, y: y, zt: zt,
                     lower_bound: Array[0,-Float::INFINITY,0],
                     &parametrization) 
 ```
+This error is not always replicated.
 
 **Result**
 MIxed-models using Ruby-MRI
@@ -124,7 +126,7 @@ Correlation of random intercept and slope:  -0.23341842320756737
 Variance:   0.6800937307812478
 Standard deviantion:  0.824677955799261
 ```
-MIxed-models using JRuby
+MIxed-models using JRuby initially gave the following result. 
 ```ruby
 (1) Model fit
 Optimal theta:  [0.0056475944592377265, -5.661316609380864e-05, 0.0]
@@ -140,27 +142,49 @@ Correlation of random intercept and slope:  -1.0
 Variance:   114.11688631756937
 Standard deviantion:  10.682550553007898
 ```
+There was an error in NMatrix#matrix_solve. After correcting it, we get the correct result.
+```ruby
+(1) Model fit
+Optimal theta:  [4.761283990026765, -0.12007961616262416, 0.5005024020787956]
+REML criterion:   162.9075251663791
+(2) Fixed effects
+Intercept:  
+Slope:  
+(3) Random effects
+Random intercept sd:  3.929341245265402
+Random slope sd:  0.4243763791586663
+Correlation of random intercept and slope:  -0.2334184232075674
+(4) Residuals
+Variance:   0.6800937307812492
+Standard deviantion:  0.8246779557992618
+```
+Next, we ran other examples and we got the correct results as we expected.
+####**Example2 : Blog_data**
 
+Blog_data example deals with real data. Initially, mixed_models was not supported by latest [daru](https://github.com/agisga/mixed_models/issues/4 .). This issue has been resolved by Alexej. 
+Currently NMatrix-JRuby has not been optimized. It is not memory efficient. Running blog_data.rb results in **OutOfMemoryError** even when 12GB of heap-size is alloted to JVM.
+This is a **work in progress** now.
 
-##**Conclusion:**
-We are getting different results due to boxing. One thing stands out how important real life testing is. **Unit tests do not cover chaining of results!** The complex computations are determined by boxing of the values.
-
-###Tests
+###**Test Report**
 
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
-|Deviance_spec|04|02|02|0|
-|LMM_spec|195|06|189|0|
-|LMM_categorical_data_spec.rb|46|15|31|0|
+|Deviance_spec|04|04|0|0|
+|LMM_spec|195|195|0|0|
+|LMM_categorical_data_spec.rb|48|45|3|0|
 |LMMFormula_spec.rb|05|05|0|0|
-|LMM_interaction_effects_spec.rb|82|21|61|0|
-|matrix_methods_spec.rb|52|40|12|0|
-|ModelSpecification_spec.rb|07|04|03|0|
+|LMM_interaction_effects_spec.rb|82|82|0|0|
+|LMM_nested_effects_spec.rb|40|40|0|0|
+|matrix_methods_spec.rb|52|48|4|0|
+|ModelSpecification_spec.rb|07|07|0|0|
 |NelderMeadWithConstraints_spec.rb|08|08|0|0|
 
+###**Features not Supported**
 
+1. **Parallel Gem:** Currently Parallel gem is not supported by JRuby. So, we can't use parallel processing to utilize multiple CPU cores. /example/bootstrap.rb can't be run with parallelism.
+2. **ArrayStoreException:** We are not exactly sure why this occurs currently. We guess it's due to a lot of memory used by arrays. We believe it can be overcome once we optimize NMatrix-JRuby. This issue was previously reported on JRuby [issues](https://github.com/jruby/jruby/issues/2615) page.
+3. **Process.fork not supported:** JRuby currently doesn't support fork. So, we had to run some tests individually which failed while running the entire test file. 
+##**Conclusion:**
+We have successfully ported mixed_models gem to JRuby. All examples (except blog_data.rb and bootstrap.rb) produce correct results. Now we need to optimize the performance of mixed_models gem which will mostly involve optimizing NMatrix-JRuby as real data as blog_example runs out of memory. 
 
-###Improvements and future work
-
-
-Now we will focus on clearing all remaining tests for NMatrix and mixed-models. We will implement ruby-objects as dtype and start working on performance.
+Next, we will implement ruby-objects as dtype and clear a few tests still remaining for NMatrix-JRuby.
