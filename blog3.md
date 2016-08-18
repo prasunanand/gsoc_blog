@@ -147,6 +147,16 @@ The added advantage of this is at run-time the ruby interpreter must not decide 
 
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
+|00_nmatrix_spec|188|139|43|6|
+|00_nmatrix_spec|17|8|09|0|
+|02_slice_spec|144|116|28|0|
+|03_nmatrix_monkeys_spec|12|11|01|0|
+|elementwise_spec|38|21|17|0|
+|homogeneous_spec.rb|07|06|01|0|
+|math_spec|737|541|196|0|
+|shortcuts_spec|81|30|51|0|
+|stat_spec|72|40|32|0|
+|slice_set_spec|6|2|04|0|
 
 
 ## **Future work**
