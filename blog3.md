@@ -129,9 +129,123 @@ public class MathHelper{
   ...
 }
 ```
-**Dot and Solve**
+## **Decomposition**
 
+NMatrix-MRI relies on LAPACKE and ATLAS for matrix decomposition and solve functionalities. Apache Commons Math provides a different set of API for decomposing a matrix and solving an equation. for-example potrf and other LAPACKE specific functions have not been implemented as they are not required at all.
 
+**Cholesky Decomposition**
+```ruby
+def factorize_cholesky
+    cholesky = CholeskyDecomposition.new(self.twoDMat)
+    l = create_dummy_nmatrix
+    twoDMat = cholesky.getL
+    l.s = ArrayRealVector.new(ArrayGenerator.getArrayDouble\
+        (twoDMat.getData, @shape[0], @shape[1]))
+    u = create_dummy_nmatrix
+    twoDMat = cholesky.getLT
+    u.s = ArrayRealVector.new(ArrayGenerator.getArrayDouble\
+      (twoDMat.getData, @shape[0], @shape[1]))
+    return [u,l]
+  end
+```
+Cholesky Decomposition for an NMatrix-JRuby requires the matrix to be square matrix.
+
+**LUDecomposition**
+
+```ruby
+  def factorize_lu with_permutation_matrix=nil
+    raise(NotImplementedError, "only implemented for dense storage")\
+       unless self.stype == :dense
+    raise(NotImplementedError, "matrix is not 2-dimensional")\
+       unless self.dimensions == 2
+    t = self.clone
+    pivot = create_dummy_nmatrix
+    twoDMat = LUDecomposition.new(self.twoDMat).getP
+    pivot.s = ArrayRealVector.new(ArrayGenerator.getArrayDouble\
+    (twoDMat.getData, @shape[0], @shape[1]))
+    return [t,pivot]
+  end
+```
+QRFactorization
+```ruby
+  def factorize_qr
+
+    raise(NotImplementedError, "only implemented for dense storage")\
+       unless self.stype == :dense
+    raise(ShapeError, "Input must be a 2-dimensional matrix to have\
+       a QR decomposition") unless self.dim == 2
+    qrdecomp = QRDecomposition.new(self.twoDMat)
+
+    qmat = create_dummy_nmatrix
+    qtwoDMat = qrdecomp.getQ
+    qmat.s = ArrayRealVector.new(ArrayGenerator.\
+      getArrayDouble(qtwoDMat.getData, @shape[0], @shape[1]))
+    rmat = create_dummy_nmatrix
+    rtwoDMat = qrdecomp.getR
+    rmat.s = ArrayRealVector.new(ArrayGenerator.\
+      getArrayDouble(rtwoDMat.getData, @shape[0], @shape[1]))
+    return [qmat,rmat]
+
+  end
+```
+**NMatrix#solve**
+
+The solve method currently uses LUDecomposition and Cholesky Decomposition for solving the equations.
+```ruby
+  def solve(b, opts = {})
+    raise(ShapeError, "Must be called on square matrix")\
+       unless self.dim == 2 && self.shape[0] == self.shape[1]
+    raise(ShapeError, "number of rows of b must equal number\
+       of cols of self") if self.shape[1] != b.shape[0]
+    raise(ArgumentError, "only works with dense matrices") if self.stype != :dense
+    raise(ArgumentError, "only works for non-integer, non-object dtypes")\
+       if integer_dtype? or object_dtype? or b.integer_dtype? or b.object_dtype?
+
+    opts = { form: :general }.merge(opts)
+    x    = b.clone
+    n    = self.shape[0]
+    nrhs = b.shape[1]
+
+    nmatrix = create_dummy_nmatrix
+    case opts[:form]
+    when :general, :upper_tri, :upper_triangular, :lower_tri, :lower_triangular
+      #LU solver
+      solver = LUDecomposition.new(self.twoDMat).getSolver
+      nmatrix.s = solver.solve(b.s)
+      return nmatrix
+    when :pos_def, :positive_definite
+      solver = Choleskyecomposition.new(self.twoDMat).getSolver
+      nmatrix.s = solver.solve(b.s)
+      return nmatrix
+    else
+      raise(ArgumentError, "#{opts[:form]} is not a valid form option")
+    end
+
+  end
+```
+
+**NMatrix#matrix_solve**
+```ruby
+  def matrix_solve rhs
+    if rhs.shape[1] > 1
+      nmatrix = NMatrix.new :copy
+      nmatrix.shape = rhs.shape
+      res = []
+      #Solve a matrix and store the vectors in a matrix
+      (0...rhs.shape[1]).each do |i|
+        res << self.solve(rhs.col(i)).s.toArray.to_a
+      end
+      #res is in col major format
+      result = ArrayGenerator.getArrayColMajorDouble \
+         res.to_java :double, rhs.shape[0], rhs.shape[1]
+      nmatrix.s = ArrayRealVector.new result
+
+      return nmatrix
+    else
+      return self.solve rhs
+    end
+  end
+```
 
 ##**Other dtypes**
 We have tried implementing float dtypes using jblas FloatMatrix. We here used jblas instead of commons math as Commons Math uses Field Elements for Floats and we may have faced issues with Reflection and TypeErasure. However, we had issues with precision. Hence, we shall be using [BigReal](http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/util/BigReal.html) class. BigReal wraps around BigDecimal class and is strict about precision.
@@ -154,7 +268,7 @@ The added advantage of this is at run-time the ruby interpreter must not decide 
 |elementwise_spec|38|21|17|0|
 |homogeneous_spec.rb|07|06|01|0|
 |math_spec|737|541|196|0|
-|shortcuts_spec|81|30|51|0|
+|shortcuts_spec|81|57|24|0|
 |stat_spec|72|40|32|0|
 |slice_set_spec|6|2|04|0|
 
