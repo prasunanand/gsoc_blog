@@ -1,9 +1,13 @@
 **NMatrix**
 -
 ## **Introduction**
-NMatrix has been developed as a linear algebra library. NMatrix wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices with double and object( ruby objects ) data type.
+
+I have been working on the project 'JRuby port of NMatrix' as my GSoC project. NMatrix, a linear algebra library wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices with double and object( ruby objects ) data type.
 Currently, we haven't introduced double as a new dtype. All the real data types are supported using doubles.
 
+## **Proposal**
+
+The proposal application can be found [here](https://docs.google.com/document/d/1EOvrH8AgYReVSmX8IsSYX8fl9CtJfHRDIgBsuMqeSIU/).
 
 ## **Storing n-dimensional matrices as flat arrays**
 
@@ -11,21 +15,137 @@ The major components of a NMatrix is its shape, elements, dtype and stype. Any m
 @s stores the elements, @shape stores the shape of array, while @dtype and @stype store the data type and storage type respectively. currently, we have nmatrix-jruby implemented for only double matrices.
 NMatrix-MRI uses @s which is an object containing elements, stride, offset as in C, we need to deal with the memory allocation for the arrays.
 
-## **Slicing**
-one-d-array
-stride of a matrix: lengths; coords
-[]
-[]=
-xslice
-slice_copy
-slice
+## **Slicing and Rank**
+```ruby
+def get_stride(nmatrix)
+  stride = Array.new()
+  (0...nmatrix.dim).each do |i|
+    stride[i] = 1;
+    (i+1...dim).each do |j|
+      stride[i] *= nmatrix.shape[j]
+    end
+  end
+  stride
+end
+```
+```ruby
+def xslice(args)
+  result = nil
 
-## **Rank**
+  if self.dim < args.length
+    raise(ArgumentError,"wrong number of arguments\
+       (#{args} for #{effective_dim(self)})")
+  else
+    result = Array.new()
+    slice = get_slice(@dim, args, @shape)
+    stride = get_stride(self)
+    if slice[:single]
+      if (@dtype == :object)
+        result = @s[dense_storage_get(slice,stride)]
+      else
+        s = @s.toArray().to_a
+        result = @s.getEntry(dense_storage_get(slice,stride))
+      end
+    else
+      result = dense_storage_get(slice,stride)
+    end
+  end
+  return result
+end
+```
+```ruby
+def get_slice(dim, args, shape_array)
+   slice = {}
+   slice[:coords]=[]
+   slice[:lengths]=[]
+   slice[:single] = true
 
+   argc = args.length
+
+   t = 0
+   (0...dim).each do |r|
+     v = t == argc ? nil : args[t]
+
+     if(argc - t + r < dim && shape_array[r] ==1)
+       slice[:coords][r]  = 0
+       slice[:lengths][r] = 1
+     elsif v.is_a?(Fixnum)
+       v_ = v.to_i.to_int
+       if (v_ < 0) # checking for negative indexes
+         slice[:coords][r]  = shape_array[r]+v_
+       else
+         slice[:coords][r]  = v_
+       end
+       slice[:lengths][r] = 1
+       t+=1
+     elsif (v.is_a?(Symbol) && v == :*)
+       slice[:coords][r] = 0
+       slice[:lengths][r] = shape_array[r]
+       slice[:single] = false
+       t+=1
+     elsif v.is_a?(Range)
+       begin_ = v.begin
+       end_ = v.end
+       excl = v.exclude_end?
+       slice[:coords][r] = (begin_ < 0) ? shape[r] + begin_ : begin_
+
+       # Exclude last element for a...b range
+       if (end_ < 0)
+         slice[:lengths][r] = shape_array[r] + end_ - slice[:coords][r]\
+            + (excl ? 0 : 1)
+       else
+         slice[:lengths][r] = end_ - slice[:coords][r] + (excl ? 0 : 1)
+       end
+
+       slice[:single] = false
+       t+=1
+     else
+       raise(ArgumentError, "expected Fixnum or Range for slice component\
+          instead of #{v.class}")
+     end
+
+     if (slice[:coords][r] > shape_array[r]
+       || slice[:coords][r] + slice[:lengths][r] > shape_array[r])
+       raise(RangeError, "slice is larger than matrix in \
+         dimension #{r} (slice component #{t})")
+     end
+   end
+
+   return slice
+ end
+```
 
 ## **Enumerators**
-pretty print
 
+```ruby
+def each_with_indices
+   nmatrix = create_dummy_nmatrix
+   stride = get_stride(self)
+   offset = 0
+   #Create indices and initialize them to zero
+   coords = Array.new(dim){ 0 }
+
+   shape_copy =  Array.new(dim)
+   (0...size).each do |k|
+     dense_storage_coords(nmatrix, k, coords, stride, offset)
+     slice_index = dense_storage_pos(coords,stride)
+     ary = Array.new
+     if (@dtype == :object)
+       ary << self.s[slice_index]
+     else
+       ary << self.s.toArray.to_a[slice_index]
+     end
+     (0...dim).each do |p|
+       ary << coords[p]
+     end
+
+     # yield the array which now consists of the value and the indices
+     yield(ary)
+   end if block_given?
+
+   return nmatrix
+ end
+```
 
 ## **Two Dimensional Matrices**
 
@@ -67,7 +187,7 @@ public class ArrayGenerator
 }
 ```
 Why use java method instead of Ruby method?
-1.  Garbage Collection =>
+1.  Memory Usage and Garbage Collection =>
 2. Speed =>
 
 
@@ -141,6 +261,7 @@ def factorize_cholesky
     twoDMat = cholesky.getL
     l.s = ArrayRealVector.new(ArrayGenerator.getArrayDouble\
         (twoDMat.getData, @shape[0], @shape[1]))
+
     u = create_dummy_nmatrix
     twoDMat = cholesky.getLT
     u.s = ArrayRealVector.new(ArrayGenerator.getArrayDouble\
@@ -169,7 +290,6 @@ Cholesky Decomposition for an NMatrix-JRuby requires the matrix to be square mat
 QRFactorization
 ```ruby
   def factorize_qr
-
     raise(NotImplementedError, "only implemented for dense storage")\
        unless self.stype == :dense
     raise(ShapeError, "Input must be a 2-dimensional matrix to have\
@@ -180,6 +300,7 @@ QRFactorization
     qtwoDMat = qrdecomp.getQ
     qmat.s = ArrayRealVector.new(ArrayGenerator.\
       getArrayDouble(qtwoDMat.getData, @shape[0], @shape[1]))
+
     rmat = create_dummy_nmatrix
     rtwoDMat = qrdecomp.getR
     rmat.s = ArrayRealVector.new(ArrayGenerator.\
@@ -247,6 +368,7 @@ The solve method currently uses LUDecomposition and Cholesky Decomposition for s
   end
 ```
 
+
 ##**Other dtypes**
 We have tried implementing float dtypes using jblas FloatMatrix. We here used jblas instead of commons math as Commons Math uses Field Elements for Floats and we may have faced issues with Reflection and TypeErasure. However, we had issues with precision. Hence, we shall be using [BigReal](http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/util/BigReal.html) class. BigReal wraps around BigDecimal class and is strict about precision.
 
@@ -257,7 +379,9 @@ To minimise conflict with the MRI codebase all the ruby code has been placed in 
 
 The added advantage of this is at run-time the ruby interpreter must not decide which function to call. The impact on performance can be seen when running programs which intensively use NMatrix for linear algebraic computations(e.g. mixed-models).
 
-###**Test Report**
+## **Performance**
+
+## **Test Report**
 
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
@@ -272,7 +396,14 @@ The added advantage of this is at run-time the ruby interpreter must not decide 
 |stat_spec|72|40|32|0|
 |slice_set_spec|6|2|04|0|
 
+Why some tests fail?
+1.  Complex dtype has not been implemented.
+2.  Sparse matrices (list and yale) have not been implemented.
+3.  Decomposition methods that are specific to LAPACK and ATLAS have not been implemented.
+4.  Integer dtype not properly assigned to Floor, Ceil and Round.
 
 ## **Future work**
 
-##**Conclusion:**
+Implement float dtype, complex dtype and integer dtype and Sparse Matrices. We have a long way to go.
+
+## **Conclusion**
