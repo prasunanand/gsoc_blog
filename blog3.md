@@ -380,6 +380,19 @@ To minimise conflict with the MRI codebase all the ruby code has been placed in 
 The added advantage of this is at run-time the ruby interpreter must not decide which function to call. The impact on performance can be seen when running programs which intensively use NMatrix for linear algebraic computations(e.g. mixed-models).
 
 ## **Performance**
+Addition
+Subtraction
+Multiplication
+Log
+Gamma
+Power
+Determinant
+Cholesky Factorization
+QR factorization
+
+## **Code Commits**
+
+https://github.com/prasunanand/nmatrix/commits/jruby_port
 
 ## **Test Report**
 
@@ -407,3 +420,10 @@ Why some tests fail?
 Implement float dtype, complex dtype and integer dtype and Sparse Matrices. We have a long way to go.
 
 ## **Conclusion**
+
+## **Acknowledgement**
+
+I am very grateful to Google and the Ruby Science Foundation for this great opportunity.
+
+I am very thankful to Charles Nutter, Dr. John Woods and Pjotr Prins, who mentored me through the project. It has been a great learning experience.
+
