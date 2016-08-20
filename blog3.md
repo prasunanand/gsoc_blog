@@ -16,6 +16,9 @@ The major components of a NMatrix is its shape, elements, dtype and stype. Any m
 NMatrix-MRI uses @s which is an object containing elements, stride, offset as in C, we need to deal with the memory allocation for the arrays.
 
 ## **Slicing and Rank**
+
+Implementing slicing was the toughest part of NMatrix-JRuby implementation.
+NMatrix@s stores the elements of a matrix as a flat_array. The elements along any dimension are accessed with the help of the stride. NMatrix#get_stride calculates the stride with the help of the dimension and shape and returns an array.
 ```ruby
 def get_stride(nmatrix)
   stride = Array.new()
@@ -28,6 +31,9 @@ def get_stride(nmatrix)
   stride
 end
 ```
+NMatrix#[] and NMatrix#[]= are thus able to read and write the elements of a matrix. NMatrix#MRI uses the @s object which stores the stride when the nmatrix is initialised.
+NMatrix#[] calls the #xslice operator which calls  #get_slice operator that use the stride to find out whether we are accessing a single element or multiple elements. If  there are multiple elements #dense_storage_get then returns an NMatrix object with the elements along the dimension.
+NMatrix-MRI differs from NMatrix-JRuby implementation as it makes sure that memory is properly utilized as the memory needs to be properly garbage collected.
 ```ruby
 def xslice(args)
   result = nil
@@ -117,6 +123,7 @@ def get_slice(dim, args, shape_array)
 
 ## **Enumerators**
 
+NMatrix-MRI uses the C code for enumerating the elements of a matrix. However, the NMatrix-JRuby uses pure Ruby code. Currently, all the enumerators for dense matrices with real data-type have been implemented and they are properly functional.
 ```ruby
 def each_with_indices
    nmatrix = create_dummy_nmatrix
@@ -287,7 +294,7 @@ Cholesky Decomposition for an NMatrix-JRuby requires the matrix to be square mat
     return [t,pivot]
   end
 ```
-QRFactorization
+**QRFactorization**
 ```ruby
   def factorize_qr
     raise(NotImplementedError, "only implemented for dense storage")\
@@ -415,15 +422,18 @@ Why some tests fail?
 3.  Decomposition methods that are specific to LAPACK and ATLAS have not been implemented.
 4.  Integer dtype not properly assigned to Floor, Ceil and Round.
 
-## **Future work**
 
-Implement float dtype, complex dtype and integer dtype and Sparse Matrices. We have a long way to go.
 
 ## **Conclusion**
+The main goal of this project was that  "JRuby users suffer less pain during migration" by creating support for libraries that help in Scientific Computation on JRuby. By the end of the   GSoC, we have been able to create a linear algebra library for JRuby users which they can easily run on their machines. We have mixed-models gem that has also been simultaneously ported to JRuby. Even here, we are very close to MRI if performance is considered.
+
+ **Future work**
+
+In the coming months we would be implementing float dtype, complex dtype and integer dtype and Sparse Matrices, thus making NMatrix a complete package for JRuby users.
+We also feel that JRuby lacks its own Jupyter notebook. The iruby notebook doesn't work for JRuby. To create an amazing experience for scientific computation on JRuby, we will be porting iruby to  JRuby.
 
 ## **Acknowledgement**
 
-I am very grateful to Google and the Ruby Science Foundation for this great opportunity.
+I am very grateful to Google and the Ruby Science Foundation for this great opportunity of a life-time.
 
 I am very thankful to Charles Nutter, Dr. John Woods and Pjotr Prins, who mentored me through the project. It has been a great learning experience.
-
