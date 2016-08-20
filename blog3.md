@@ -165,6 +165,8 @@ Linear algebra is mostly about two-dimensional matrices. When performing calcula
 
 Getting a two-d-matrix
 
+![Alt Getting a two-d-matrix](./img/blog3/matrixGenerate.png?raw=true "Fig.1. Getting a two-d-matrix")
+
 ```java
 public class MatrixGenerator
 {
@@ -267,7 +269,7 @@ NMatrix-MRI relies on LAPACKE and ATLAS for matrix decomposition and solve funct
 
 **Cholesky Decomposition**
 ```ruby
-def factorize_cholesky
+  def factorize_cholesky
     cholesky = CholeskyDecomposition.new(self.twoDMat)
     l = create_dummy_nmatrix
     twoDMat = cholesky.getL
