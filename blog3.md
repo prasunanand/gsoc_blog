@@ -2,7 +2,7 @@
 -
 ## **Introduction**
 
-I have been working on the project 'JRuby port of NMatrix' as my GSoC project. NMatrix, a linear algebra library wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices with double and object( ruby objects ) data type.
+I have been working on the project **JRuby port of NMatrix** as my GSoC project. NMatrix, a linear algebra library wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices with double and object( ruby objects ) data type.
 Currently, we haven't introduced double as a new dtype. All the real data types are supported using doubles.
 
 ## **Proposal**
@@ -12,7 +12,10 @@ The proposal application can be found [here](https://docs.google.com/document/d/
 ## **Storing n-dimensional matrices as flat arrays**
 
 The major components of a NMatrix is its shape, elements, dtype and stype. Any matrix when initialised, the elements are stored in flat arrays. ArrayRealVector class is used to store the elements.
+
 @s stores the elements, @shape stores the shape of array, while @dtype and @stype store the data type and storage type respectively. currently, we have nmatrix-jruby implemented for only double matrices.
+
+
 NMatrix-MRI uses @s which is an object containing elements, stride, offset as in C, we need to deal with the memory allocation for the arrays.
 
 ## **Slicing and Rank**
@@ -32,7 +35,9 @@ def get_stride(nmatrix)
 end
 ```
 NMatrix#[] and NMatrix#[]= are thus able to read and write the elements of a matrix. NMatrix#MRI uses the @s object which stores the stride when the nmatrix is initialised.
+
 NMatrix#[] calls the #xslice operator which calls  #get_slice operator that use the stride to find out whether we are accessing a single element or multiple elements. If  there are multiple elements #dense_storage_get then returns an NMatrix object with the elements along the dimension.
+
 NMatrix-MRI differs from NMatrix-JRuby implementation as it makes sure that memory is properly utilized as the memory needs to be properly garbage collected.
 ```ruby
 def xslice(args)
@@ -417,6 +422,7 @@ https://github.com/prasunanand/nmatrix/commits/jruby_port
 |slice_set_spec|6|2|04|0|
 
 Why some tests fail?
+
 1.  Complex dtype has not been implemented.
 2.  Sparse matrices (list and yale) have not been implemented.
 3.  Decomposition methods that are specific to LAPACK and ATLAS have not been implemented.
