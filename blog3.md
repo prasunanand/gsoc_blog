@@ -9,6 +9,10 @@ Currently, we haven't introduced double as a new dtype. All the real data types 
 
 The proposal application can be found [here](https://docs.google.com/document/d/1EOvrH8AgYReVSmX8IsSYX8fl9CtJfHRDIgBsuMqeSIU/).
 
+## **Code Commits**
+
+https://github.com/prasunanand/nmatrix/commits/jruby_port
+
 ## **Storing n-dimensional matrices as flat arrays**
 
 The major components of a NMatrix is its shape, elements, dtype and stype. Any matrix when initialised, the elements are stored in flat arrays. ArrayRealVector class is used to store the elements.
@@ -131,31 +135,32 @@ def get_slice(dim, args, shape_array)
 NMatrix-MRI uses the C code for enumerating the elements of a matrix. However, the NMatrix-JRuby uses pure Ruby code. Currently, all the enumerators for dense matrices with real data-type have been implemented and they are properly functional.
 ```ruby
 def each_with_indices
-   nmatrix = create_dummy_nmatrix
-   stride = get_stride(self)
-   offset = 0
-   #Create indices and initialize them to zero
-   coords = Array.new(dim){ 0 }
+  nmatrix = create_dummy_nmatrix
+  stride = get_stride(self)
+  offset = 0
+  #Create indices and initialize them to zero
+  coords = Array.new(dim){ 0 }
 
-   shape_copy =  Array.new(dim)
-   (0...size).each do |k|
-     dense_storage_coords(nmatrix, k, coords, stride, offset)
-     slice_index = dense_storage_pos(coords,stride)
-     ary = Array.new
-     if (@dtype == :object)
-       ary << self.s[slice_index]
-     else
-       ary << self.s.toArray.to_a[slice_index]
-     end
-     (0...dim).each do |p|
-       ary << coords[p]
-     end
+  shape_copy =  Array.new(dim)
+  (0...size).each do |k|
+    dense_storage_coords(nmatrix, k, coords, stride, offset)
+    slice_index = dense_storage_pos(coords,stride)
+    ary = Array.new
+    if (@dtype == :object)
+      ary << self.s[slice_index]
+    else
+      ary << self.s.toArray.to_a[slice_index]
+    end
+    (0...dim).each do |p|
+      ary << coords[p]
+    end
 
-     # yield the array which now consists of the value and the indices
-     yield(ary)
-   end if block_given?
+    # yield the array which now consists of the value and the indices
+    yield(ary)
+  end if block_given?
+  nmatrix.s = @s
 
-   return nmatrix
+  return nmatrix
  end
 ```
 
@@ -201,7 +206,7 @@ public class ArrayGenerator
 }
 ```
 Why use java method instead of Ruby method?
-1.  Memory Usage and Garbage Collection =>
+1. Memory Usage and Garbage Collection =>
 2. Speed =>
 
 
@@ -404,16 +409,12 @@ Determinant
 Cholesky Factorization
 QR factorization
 
-## **Code Commits**
-
-https://github.com/prasunanand/nmatrix/commits/jruby_port
-
 ## **Test Report**
 
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
 |00_nmatrix_spec|188|139|43|6|
-|00_nmatrix_spec|17|8|09|0|
+|01_enum_spec|17|8|09|0|
 |02_slice_spec|144|116|28|0|
 |03_nmatrix_monkeys_spec|12|11|01|0|
 |elementwise_spec|38|21|17|0|
