@@ -1,8 +1,8 @@
-**NMatrix**
+**Project Report: Port NMatrix to JRuby**
 -
 ## **Introduction**
 
-I have been working on the project **JRuby port of NMatrix** as my GSoC project. NMatrix, a linear algebra library wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices with double and object( ruby objects ) data type.
+I have been working on the project **Port NMatrix to JRuby** as my GSoC project. NMatrix, a linear algebra library wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices with double and object( ruby objects ) data type.
 Currently, we haven't introduced double as a new dtype. All the real data types are supported using doubles.
 
 ## **Proposal**
@@ -68,71 +68,56 @@ def xslice(args)
   return result
 end
 ```
+NMatrix#[]= calls the #dense_storage_set operator which calls #get_slice operator that use the stride to find out whether we are accessing a single element or multiple elements. If there are multiple elements #set_slice recursively sets the elements of the matrix then returns an NMatrix object with the elements along the dimension.
 ```ruby
-def get_slice(dim, args, shape_array)
-   slice = {}
-   slice[:coords]=[]
-   slice[:lengths]=[]
-   slice[:single] = true
+def dense_storage_set(slice, right)
+    stride = get_stride(self)
+    v_size = 1
 
-   argc = args.length
+    if right.is_a?(NMatrix)
+      right = right.s.toArray.to_a
+    end
 
-   t = 0
-   (0...dim).each do |r|
-     v = t == argc ? nil : args[t]
+    if(right.is_a?(Array))
+      v_size = right.length
+      v = right
+      if (dtype == :RUBYOBJ)
+        # nm_register_values(reinterpret_cast<VALUE*>(v), v_size)
+      end
 
-     if(argc - t + r < dim && shape_array[r] ==1)
-       slice[:coords][r]  = 0
-       slice[:lengths][r] = 1
-     elsif v.is_a?(Fixnum)
-       v_ = v.to_i.to_int
-       if (v_ < 0) # checking for negative indexes
-         slice[:coords][r]  = shape_array[r]+v_
-       else
-         slice[:coords][r]  = v_
-       end
-       slice[:lengths][r] = 1
-       t+=1
-     elsif (v.is_a?(Symbol) && v == :*)
-       slice[:coords][r] = 0
-       slice[:lengths][r] = shape_array[r]
-       slice[:single] = false
-       t+=1
-     elsif v.is_a?(Range)
-       begin_ = v.begin
-       end_ = v.end
-       excl = v.exclude_end?
-       slice[:coords][r] = (begin_ < 0) ? shape[r] + begin_ : begin_
-
-       # Exclude last element for a...b range
-       if (end_ < 0)
-         slice[:lengths][r] = shape_array[r] + end_ - slice[:coords][r]\
-            + (excl ? 0 : 1)
-       else
-         slice[:lengths][r] = end_ - slice[:coords][r] + (excl ? 0 : 1)
-       end
-
-       slice[:single] = false
-       t+=1
-     else
-       raise(ArgumentError, "expected Fixnum or Range for slice component\
-          instead of #{v.class}")
-     end
-
-     if (slice[:coords][r] > shape_array[r]
-       || slice[:coords][r] + slice[:lengths][r] > shape_array[r])
-       raise(RangeError, "slice is larger than matrix in \
-         dimension #{r} (slice component #{t})")
-     end
-   end
-
-   return slice
- end
+      (0...v_size).each do |m|
+        v[m] = right[m]
+      end
+    else
+      v = [right]
+      if (@dtype == :RUBYOBJ)
+        # nm_register_values(reinterpret_cast<VALUE*>(v), v_size)
+      end
+    end
+    if(slice[:single])
+      # reinterpret_cast<D*>(s->elements)[nm_dense_storage_pos(s, slice->coords)] = v;
+      pos = dense_storage_pos(slice[:coords],stride)
+      if @dtype == :object
+        @s[pos] = v[0]
+      else
+        @s.setEntry(pos, v[0])
+      end
+    else
+      v_offset = 0
+      dest = {}
+      dest[:stride] = get_stride(self)
+      dest[:shape] = shape
+      # dest[:elements] = @s.toArray().to_a
+      dense_pos = dense_storage_pos(slice[:coords],stride)
+      slice_set(dest, slice[:lengths], dense_pos, 0, v, v_size, v_offset)
+    end
+  end
 ```
 
 ## **Enumerators**
 
 NMatrix-MRI uses the C code for enumerating the elements of a matrix. However, the NMatrix-JRuby uses pure Ruby code. Currently, all the enumerators for dense matrices with real data-type have been implemented and they are properly functional.
+We haven't implemented enumerators for objects currently.
 ```ruby
 def each_with_indices
   nmatrix = create_dummy_nmatrix
@@ -166,7 +151,7 @@ def each_with_indices
 
 ## **Two Dimensional Matrices**
 
-Linear algebra is mostly about two-dimensional matrices. When performing calculations in a two-dimensional matrix, a flat array is converted to a two-dimensional matrix. A two-dimensional matrix is stored as a BlockRealMatix or Array2DRowRealMatrix. Each of them has its own advantages.
+Linear algebra is mostly about two-dimensional matrices. In NMatrix, when performing calculations in a two-dimensional matrix, a flat array is converted to a two-dimensional matrix. A two-dimensional matrix is stored as a BlockRealMatix or Array2DRowRealMatrix. Each of them has its own advantages.
 
 Getting a two-d-matrix
 
@@ -271,6 +256,20 @@ public class MathHelper{
 ## **Decomposition**
 
 NMatrix-MRI relies on LAPACKE and ATLAS for matrix decomposition and solve functionalities. Apache Commons Math provides a different set of API for decomposing a matrix and solving an equation. for-example potrf and other LAPACKE specific functions have not been implemented as they are not required at all.
+
+Calculating determinant in NMatrix is tricky where a matrix is reduced either a Lower or Upper matrix and the diagonal elements of the matrix are multiplied to get the result. Also, the correct sign of the result whether positive or negative is taken into account, while calculating the determinanat. However, NMatrix-JRuby uses commons-math api to calculate the determinant.
+
+```ruby
+def det_exact
+  if (@dim != 2 || @shape[0] != @shape[1])
+    raise(ShapeError, "matrices must be square to have a determinant defined")
+    return nil
+  end
+  to_return = LUDecomposition.new(self.twoDMat).getDeterminant()
+end
+```
+
+Given below is the code, that shows how Cholesky decomposition has been implemented by using Commons Math API. Similarly, LU Decomposition and QR factorization have been implemented.
 
 **Cholesky Decomposition**
 ```ruby
@@ -386,7 +385,7 @@ The solve method currently uses LUDecomposition and Cholesky Decomposition for s
     end
   end
 ```
-
+Currently, Hessenberg transformation for an NMatix has not been implemented.
 
 ##**Other dtypes**
 We have tried implementing float dtypes using jblas FloatMatrix. We here used jblas instead of commons math as Commons Math uses Field Elements for Floats and we may have faced issues with Reflection and TypeErasure. However, we had issues with precision. Hence, we shall be using [BigReal](http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/util/BigReal.html) class. BigReal wraps around BigDecimal class and is strict about precision.
@@ -434,14 +433,14 @@ Why some tests fail?
 
 
 ## **Conclusion**
-The main goal of this project was that  "JRuby users suffer less pain during migration" by creating support for libraries that help in Scientific Computation on JRuby. By the end of the   GSoC, we have been able to create a linear algebra library for JRuby users which they can easily run on their machines. We have mixed-models gem that has also been simultaneously ported to JRuby. Even here, we are very close to MRI if performance is considered.
+The main goal of this project was that  **JRuby users suffer less pain during migration** by creating support for libraries that help in Scientific Computation on JRuby. By the end of the   GSoC, we have been able to create a linear algebra library for JRuby users which they can easily run on their machines. We have mixed-models gem that has also been simultaneously ported to JRuby. Even here, we are very close to MRI if performance is considered.
 
  **Future work**
 
 In the coming months we would be implementing float dtype, complex dtype and integer dtype and Sparse Matrices, thus making NMatrix a complete package for JRuby users.
 We also feel that JRuby lacks its own Jupyter notebook. The iruby notebook doesn't work for JRuby. To create an amazing experience for scientific computation on JRuby, we will be porting iruby to  JRuby.
 
-## **Acknowledgement**
+## **Acknowledgements**
 
 I am very grateful to Google and the Ruby Science Foundation for this great opportunity of a life-time.
 
