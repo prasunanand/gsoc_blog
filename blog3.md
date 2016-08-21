@@ -23,7 +23,6 @@ The major components of a NMatrix is its shape, elements, dtype and stype. Any m
 NMatrix-MRI uses @s which is an object containing elements, stride, offset as in C, we need to deal with the memory allocation for the arrays.
 
 ![NMatrix](./img/blog3/nmatrix.png?raw=true "Fig.1. NMatrix")
-
 ## **Slicing and Rank**
 
 Implementing slicing was the toughest part of NMatrix-JRuby implementation.
@@ -366,6 +365,38 @@ The solve method currently uses LUDecomposition and Cholesky Decomposition for s
 ```
 
 **NMatrix#matrix_solve**
+Given we need to solved a system of linear equations
+
+                        AX = B
+where A is an m×n matrix, B and X are n×p matrices, we needed to solve this equation by iterating through B.
+
+NMatrix-MRI implements this functionality using NMatrix::BLAS::cblas_trsm operator. However, for NMatrix-JRuby, we implemented NMatrix#matrix_solve.
+```ruby
+  def matrix_solve b
+    if b.shape[1] > 1
+      nmatrix = NMatrix.new :copy
+      nmatrix.shape = b.shape
+      result = []
+      res = []
+      (0...b.shape[1]).each do |i|
+        res << self.solve(b.col(i)).s.toArray.to_a
+      end
+      index = 0
+      (0...b.shape[0]).each do |i|
+        (0...b.shape[1]).each do |j|
+          result[index] = res[j][i]
+          index+=1
+        end
+      end
+      nmatrix.s = ArrayRealVector.new result.to_java :double
+      nmatrix.twoDMat =  MatrixUtils.createRealMatrix get_twoDArray(b.shape, result)
+
+      return nmatrix
+    else
+      return self.solve b
+    end
+  end
+```
 ```ruby
   def matrix_solve rhs
     if rhs.shape[1] > 1
