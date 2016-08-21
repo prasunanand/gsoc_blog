@@ -22,6 +22,8 @@ The major components of a NMatrix is its shape, elements, dtype and stype. Any m
 
 NMatrix-MRI uses @s which is an object containing elements, stride, offset as in C, we need to deal with the memory allocation for the arrays.
 
+![NMatrix](./img/blog3/nmatrix.png?raw=true "Fig.1. NMatrix")
+
 ## **Slicing and Rank**
 
 Implementing slicing was the toughest part of NMatrix-JRuby implementation.
@@ -155,7 +157,7 @@ Linear algebra is mostly about two-dimensional matrices. In NMatrix, when perfor
 
 Getting a two-d-matrix
 
-![Alt Getting a two-d-matrix](./img/blog3/matrixGenerate.png?raw=true "Fig.1. Getting a two-d-matrix")
+![Alt Getting a two-d-matrix](./img/blog3/matrixGenerate.png?raw=true "Fig.2. Getting a two-d-matrix")
 
 ```java
 public class MatrixGenerator
