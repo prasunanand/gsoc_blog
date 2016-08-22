@@ -2,8 +2,8 @@
 -
 ## **Introduction**
 
-I have been working on the project **Port NMatrix to JRuby** as my GSoC project. NMatrix, a linear algebra library wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices with double and object( ruby objects ) data type.
-Currently, we haven't introduced double as a new dtype. All the real data types are supported using doubles.
+I have been working on the project **Port NMatrix to JRuby** as my GSoC project. NMatrix, a linear algebra library wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices with double and object ( ruby objects ) data type. I have also worked on porting mixed-models gem to JRuby which heavily uses NMatrix at its core.
+This blog post summarizes my work on the project, with Sciruby and reports the final status of the project.
 
 ## **Proposal**
 
@@ -192,8 +192,11 @@ public class ArrayGenerator
 }
 ```
 Why use java method instead of Ruby method?
-1. Memory Usage and Garbage Collection =>
-2. Speed =>
+
+1. Memory Usage and Garbage Collection => A scientific library is memory intensive and hence, every step counts.
+ JRuby interpreter doesn't need to dynamically guess the data type and uses less memory, i.e around 10 times. If the memory is properly utilized; when the GC kicks in, it has to clear less memory and improves the speed.
+
+2. Speed => Using java method greatly improves the speed around 1000 times, when compared to using ruby method.
 
 
 ## **Operators**
@@ -371,32 +374,7 @@ Given we need to solved a system of linear equations
 where A is an m×n matrix, B and X are n×p matrices, we needed to solve this equation by iterating through B.
 
 NMatrix-MRI implements this functionality using NMatrix::BLAS::cblas_trsm operator. However, for NMatrix-JRuby, we implemented NMatrix#matrix_solve.
-```ruby
-  def matrix_solve b
-    if b.shape[1] > 1
-      nmatrix = NMatrix.new :copy
-      nmatrix.shape = b.shape
-      result = []
-      res = []
-      (0...b.shape[1]).each do |i|
-        res << self.solve(b.col(i)).s.toArray.to_a
-      end
-      index = 0
-      (0...b.shape[0]).each do |i|
-        (0...b.shape[1]).each do |j|
-          result[index] = res[j][i]
-          index+=1
-        end
-      end
-      nmatrix.s = ArrayRealVector.new result.to_java :double
-      nmatrix.twoDMat =  MatrixUtils.createRealMatrix get_twoDArray(b.shape, result)
 
-      return nmatrix
-    else
-      return self.solve b
-    end
-  end
-```
 ```ruby
   def matrix_solve rhs
     if rhs.shape[1] > 1
@@ -421,7 +399,7 @@ NMatrix-MRI implements this functionality using NMatrix::BLAS::cblas_trsm operat
 Currently, Hessenberg transformation for an NMatix has not been implemented.
 
 ##**Other dtypes**
-We have tried implementing float dtypes using jblas FloatMatrix. We here used jblas instead of commons math as Commons Math uses Field Elements for Floats and we may have faced issues with Reflection and TypeErasure. However, we had issues with precision. Hence, we shall be using [BigReal](http://commons.apache.org/proper/commons-math/apidocs/org/apache/commons/math3/util/BigReal.html) class. BigReal wraps around BigDecimal class and is strict about precision.
+We have tried implementing float dtypes using jblas FloatMatrix. We here used jblas instead of commons math as Commons Math uses Field Elements for Floats and we may have faced issues with Reflection and TypeErasure. However, we had issues with precision.
 
 
 ##**Code Organisation and Deployment**
@@ -431,6 +409,13 @@ To minimise conflict with the MRI codebase all the ruby code has been placed in 
 The added advantage of this is at run-time the ruby interpreter must not decide which function to call. The impact on performance can be seen when running programs which intensively use NMatrix for linear algebraic computations(e.g. mixed-models).
 
 ## **Performance**
+We have benchmarked some of the NMatrix functionalities. The following plots compare the performance between NMatrix-JRuby, NMatrix-MRI and NMatrix-MRI using LAPACKE/ATLAS libraries.
+Note:
+
+1. Addition and subtraction are not supported by LAPACKE/ATLAS.
+2. NMatrix - MRI relies on LAPACKE/ATLAS for calculating determinants and LU Decomposition(lud).
+
+
 ![Alt Matrix Addition](./img/blog3/plots/add.png?raw=true "Fig.3. Matrix Addition")
 ![Alt Matrix Subtraction](./img/blog3/plots/subtract.png?raw=true "Fig.4. Matrix Subtraction")
 ![Alt Matrix Multiplication](./img/blog3/plots/mult.png?raw=true "Fig.5. Matrix Multiplication")
@@ -438,6 +423,7 @@ The added advantage of this is at run-time the ruby interpreter must not decide 
 ![Alt Determinant](./img/blog3/plots/determinant.png?raw=true "Fig.7. Determinant")
 ![Alt LU Facorization](./img/blog3/plots/lud.png?raw=true "Fig.8. LU Facorization")
 
+**Result:** NMatrix-JRuby is currently slower than NMatrix-MRI when we are dealing with two dimensional matrices. It is a clear winner when we are working with matrices of arbitrary dimension.
 ## **Test Report**
 
 |Spec file|Total Test|Success|Failure|Pending|
@@ -463,15 +449,19 @@ Why some tests fail?
 
 
 ## **Conclusion**
-The main goal of this project was that  **JRuby users suffer less pain during migration** by creating support for libraries that help in Scientific Computation on JRuby. By the end of the   GSoC, we have been able to create a linear algebra library for JRuby users which they can easily run on their machines. We have mixed-models gem that has also been simultaneously ported to JRuby. Even here, we are very close to MRI if performance is considered.
+The main goal of this project was to bring  **Scientific Computation to JRuby**, to gain from the performance JRuby offers. By the end of the   GSoC, we have been able to successfully create a linear algebra library, NMatrix for JRuby users, which they can easily run on their machines. We have mixed-models gem simultaneously ported to JRuby. Even here, we are very close to MRI if performance is considered.
 
  **Future work**
 
-In the coming months we would be implementing float dtype, complex dtype and integer dtype and Sparse Matrices, thus making NMatrix a complete package for JRuby users.
+In the coming months we would be implementing Sparse Matrices, thus making NMatrix a complete package for JRuby users. We would also work on improving performance using parallelization.
 We also feel that JRuby lacks its own Jupyter notebook. The iruby notebook doesn't work for JRuby. To create an amazing experience for scientific computation on JRuby, we will be porting iruby to  JRuby.
 
 ## **Acknowledgements**
 
-I am very grateful to Google and the Ruby Science Foundation for this great opportunity of a life-time.
+I would like to express my sincere gratitude to my mentor Pjotr Prins for the continuous support through the summers, for his patience, motivation, enthusiasm, and immense knowledge. I could not have imagined having a better advisor and mentor, for this project.
 
-I am very thankful to Charles Nutter, Dr. John Woods and Pjotr Prins, who mentored me through the project. It has been a great learning experience.
+I am very grateful to Google and the Ruby Science Foundation for this golden opportunity.
+
+I am very thankful to Charles Nutter, John Woods, Sameer Deshmukh, Kenta Murata and Alexej Gossmann, who mentored me through the project. It has been a great learning experience.
+
+I thank my fellow GSoC participants Rajith, Lokesh and Gaurav who helped me with certain aspects of my project.
