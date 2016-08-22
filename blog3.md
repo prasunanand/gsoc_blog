@@ -431,12 +431,12 @@ To minimise conflict with the MRI codebase all the ruby code has been placed in 
 The added advantage of this is at run-time the ruby interpreter must not decide which function to call. The impact on performance can be seen when running programs which intensively use NMatrix for linear algebraic computations(e.g. mixed-models).
 
 ## **Performance**
-![Alt Matrix Addition](./img/blog3/plots/add.png?raw=true "Fig.1. Matrix Addition")
-![Alt Matrix Subtraction](./img/blog3/plots/subtract.png?raw=true "Fig.2. Matrix Subtraction")
-![Alt Matrix Multiplication](./img/blog3/plots/mult.png?raw=true "Fig.3. Matrix Multiplication")
-![Alt Gamma operator](./img/blog3/plots/gamma.png?raw=true "Fig.1. Gamma Operator")
-![Alt Determinant](./img/blog3/plots/determinant.png?raw=true "Fig.2. Determinant")
-![Alt LU Facorization](./img/blog3/plots/lud.png?raw=true "Fig.3. LU Facorization")
+![Alt Matrix Addition](./img/blog3/plots/add.png?raw=true "Fig.3. Matrix Addition")
+![Alt Matrix Subtraction](./img/blog3/plots/subtract.png?raw=true "Fig.4. Matrix Subtraction")
+![Alt Matrix Multiplication](./img/blog3/plots/mult.png?raw=true "Fig.5. Matrix Multiplication")
+![Alt Gamma operator](./img/blog3/plots/gamma.png?raw=true "Fig.6. Gamma Operator")
+![Alt Determinant](./img/blog3/plots/determinant.png?raw=true "Fig.7. Determinant")
+![Alt LU Facorization](./img/blog3/plots/lud.png?raw=true "Fig.8. LU Facorization")
 
 ## **Test Report**
 
