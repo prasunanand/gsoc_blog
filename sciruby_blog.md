@@ -10,7 +10,7 @@ This blog post summarizes my work on the project with Sciruby, and reports the f
 
 ## **Proposal**
 
-The proposal application can be found [here](https://github.com/prasunanand/resume/blob/master/gsoc-application.md).
+The proposal application can be found [here](https://github.com/prasunanand/resume/blob/master/gsoc2016_application.md).
 
 ## **Code Commits**
 
