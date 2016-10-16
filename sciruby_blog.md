@@ -23,7 +23,7 @@ The major components of a NMatrix is its shape, elements, dtype and stype. Any n
 
 NMatrix-MRI uses @s which is an object containing elements, stride, offset as in C, we need to deal with the memory allocation for the arrays.
 
-![NMatrix](https://github.com/prasunanand/prasunanand.github.io/img/sciruby_blog/nmatrix.png?raw=true "Fig.1. NMatrix")
+![NMatrix](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/nmatrix.png?raw=true "Fig.1. NMatrix")
 
 ## **Slicing and Rank**
 
@@ -164,7 +164,7 @@ Linear algebra is mostly about two-dimensional matrices. In NMatrix, when perfor
 
 Getting a two-d-matrix
 
-![Alt Getting a two-d-matrix](https://github.com/prasunanand/prasunanand.github.io/img/sciruby_blog/matrixGenerate.png?raw=true "Fig.2. Getting a two-d-matrix")
+![Alt Getting a two-d-matrix](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/matrixGenerate.png?raw=true "Fig.2. Getting a two-d-matrix")
 
 ```java
 public class MatrixGenerator
@@ -441,12 +441,12 @@ Note:
 2. NMatrix - MRI relies on LAPACKE/ATLAS for calculating determinants and LU Decomposition(lud).
 
 
-![Alt Matrix Addition](https://github.com/prasunanand/prasunanand.github.io/img/sciruby_blog/plots/add.png?raw=true "Fig.3. Matrix Addition")
-![Alt Matrix Subtraction](https://github.com/prasunanand/prasunanand.github.io/img/sciruby_blog/plots/subt.png?raw=true "Fig.4. Matrix Subtraction")
-![Alt Matrix Multiplication](https://github.com/prasunanand/prasunanand.github.io/img/sciruby_blog/plots/mult.png?raw=true "Fig.5. Matrix Multiplication")
-![Alt Gamma operator](https://github.com/prasunanand/prasunanand.github.io/img/sciruby_blog/plots/gamma.png?raw=true "Fig.6. Gamma Operator")
-![Alt Determinant](https://github.com/prasunanand/prasunanand.github.io/img/sciruby_blog/plots/det.png?raw=true "Fig.7. Determinant")
-![Alt LU Facorization](https://github.com/prasunanand/prasunanand.github.io/img/sciruby_blog/plots/lud.png?raw=true "Fig.8. LU Facorization")
+![Alt Matrix Addition](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/add.png?raw=true "Fig.3. Matrix Addition")
+![Alt Matrix Subtraction](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/subt.png?raw=true "Fig.4. Matrix Subtraction")
+![Alt Matrix Multiplication](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/mult.png?raw=true "Fig.5. Matrix Multiplication")
+![Alt Gamma operator](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/gamma.png?raw=true "Fig.6. Gamma Operator")
+![Alt Determinant](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/det.png?raw=true "Fig.7. Determinant")
+![Alt LU Facorization](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/lud.png?raw=true "Fig.8. LU Facorization")
 
 **Result:**
 
