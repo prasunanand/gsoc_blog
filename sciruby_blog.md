@@ -458,6 +458,9 @@ Note:
 
 ## **Test Report**
 
+After the port; this is the final report that summarizes the number of tests that successfully pass: 
+
+**NMatrix**
 |Spec file|Total Tests|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
 |00_nmatrix_spec|188|139|43|6|
@@ -479,7 +482,7 @@ Why some tests fail?
 3.  Decomposition methods that are specific to LAPACK and ATLAS have not been implemented.
 4.  Integer dtype not properly assigned to Floor, Ceil and Round.
 
-### **Test Report**
+**Mixed-Models**
 
 |Spec file|Total Test|Success|Failure|Pending|
 |------------|:------------:|:-----------:|:-------------:|:-------------:|
