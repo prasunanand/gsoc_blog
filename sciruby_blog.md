@@ -36,7 +36,7 @@ Note:
 
 **Result:**
 
-1. For, two dimensional matrices, NMatrix-JRuby is currently slower than NMatrix-MRI for matrix multiplication and matrix decomposition functionalities(calculating determinant and factorizing a matrix). NMatrix-JRuby is faster than NMatrix-MRI for other functionalities of a two dimensional matrix like addition, subtraction, trigonometic operations, etc.
+1. For, two dimensional matrices, NMatrix-JRuby is currently slower than NMatrix-MRI for matrix multiplication and matrix decomposition functionalities(calculating determinant and factorizing a matrix). NMatrix-JRuby is faster than NMatrix-MRI for other functionalities of a two dimensional matrix like addition, subtraction, trigonometric operations, etc.
 
 2. NMatrix-JRuby is a clear winner when we are working with matrices of arbitrary dimensions.
 
@@ -446,7 +446,7 @@ NMatrix-MRI implements this functionality using *NMatrix::BLAS::cblas_trsm* meth
   end
 ```
 
-Currently, Hessenberg transformation for NMatix-JRuby has not been implemented.
+Currently, Hessenberg transformation for NMatrix-JRuby has not been implemented.
 
 ## **Other dtypes**
 
@@ -505,7 +505,7 @@ Why some tests fail?
 
 ## **Future work**
 
-NMatrix on JRuby offers comparable speeds to MRI. For specific computations it will be possible to leverage the treading support of JRuby and speed up things using multiple cores.
+NMatrix on JRuby offers comparable speeds to MRI. For specific computations it will be possible to leverage the threading support of JRuby and speed up things using multiple cores.
 
 Adding new functionality to NMatrix-JRuby will be easy from here. Personally I am interested to add OpenCL support to leverage the GPU computational capacity available on most machines today.
 
