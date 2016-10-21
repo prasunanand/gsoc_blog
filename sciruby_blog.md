@@ -16,6 +16,31 @@ The original GSoC proposal, plan and application can be found [here](https://git
 
 [https://github.com/prasunanand/nmatrix/commits/jruby_port](https://github.com/prasunanand/nmatrix/commits/jruby_port)
 
+
+## **Performance**
+We have benchmarked some of the NMatrix functionalities. The following plots compare the performance between NMatrix-JRuby, NMatrix-MRI and NMatrix-MRI using LAPACK/ATLAS libraries.
+
+
+Note:
+
+1. Addition and subtraction are not supported by LAPACK/ATLAS.
+2. NMatrix-MRI relies on LAPACK/ATLAS for calculating determinants and LU Decomposition(lud).
+
+
+![Alt Matrix Addition](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/add.png?raw=true "Fig.3. Matrix Addition")
+![Alt Matrix Subtraction](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/subt.png?raw=true "Fig.4. Matrix Subtraction")
+![Alt Matrix Multiplication](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/mult.png?raw=true "Fig.5. Matrix Multiplication")
+![Alt Gamma operator](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/gamma.png?raw=true "Fig.6. Gamma Operator")
+![Alt Determinant](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/det.png?raw=true "Fig.7. Determinant")
+![Alt LU Facorization](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/lud.png?raw=true "Fig.8. LU Facorization")
+
+**Result:**
+
+1. For, two dimensional matrices, NMatrix-JRuby is currently slower than NMatrix-MRI for matrix multiplication, and matrix decomposition functionalities(calculating determinant and factorizing a matrix). NMatrix-JRuby is faster than NMatrix-MRI for other functionalities of a two dimensional matrix, like addition, subtraction, trigonometic operations, etc.
+
+2. NMatrix-JRuby is a clear winner when we are working with matrices of arbitrary dimension.
+
+
 ## **Storing n-dimensional matrices as flat arrays**
 
 The major components of NMatrix are shape, elements, dtype and stype. Any nmatrix when initialised, stores the elements as a flat array. ArrayRealVector class is used to store the elements.
@@ -432,29 +457,6 @@ We have tried implementing float dtypes using jblas FloatMatrix.  jblas was used
 To minimise conflict with the MRI codebase all the ruby code has been placed in */lib/nmatrix/jruby* directory. */lib/nmatrix/nmatrix.rb* decides whether to load *nmatrix.so* or *nmatrix_jruby.rb* after detecting the Ruby Platform.
 
 The added advantage is that the ruby interpreter must not decide which function to call at run-time. The impact on performance can be seen when programs which intensively use NMatrix for linear algebraic computations(e.g. mixed-models) are run.
-
-## **Performance**
-We have benchmarked some of the NMatrix functionalities. The following plots compare the performance between NMatrix-JRuby, NMatrix-MRI and NMatrix-MRI using LAPACK/ATLAS libraries.
-
-
-Note:
-
-1. Addition and subtraction are not supported by LAPACK/ATLAS.
-2. NMatrix-MRI relies on LAPACK/ATLAS for calculating determinants and LU Decomposition(lud).
-
-
-![Alt Matrix Addition](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/add.png?raw=true "Fig.3. Matrix Addition")
-![Alt Matrix Subtraction](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/subt.png?raw=true "Fig.4. Matrix Subtraction")
-![Alt Matrix Multiplication](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/mult.png?raw=true "Fig.5. Matrix Multiplication")
-![Alt Gamma operator](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/gamma.png?raw=true "Fig.6. Gamma Operator")
-![Alt Determinant](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/det.png?raw=true "Fig.7. Determinant")
-![Alt LU Facorization](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/plots/lud.png?raw=true "Fig.8. LU Facorization")
-
-**Result:**
-
-1. For, two dimensional matrices, NMatrix-JRuby is currently slower than NMatrix-MRI for matrix multiplication, and matrix decomposition functionalities(calculating determinant and factorizing a matrix). NMatrix-JRuby is faster than NMatrix-MRI for other functionalities of a two dimensional matrix, like addition, subtraction, trigonometic operations, etc.
-
-2. NMatrix-JRuby is a clear winner when we are working with matrices of arbitrary dimension.
 
 ## **Test Report**
 
