@@ -36,19 +36,19 @@ Note:
 
 **Result:**
 
-1. For, two dimensional matrices, NMatrix-JRuby is currently slower than NMatrix-MRI for matrix multiplication, and matrix decomposition functionalities(calculating determinant and factorizing a matrix). NMatrix-JRuby is faster than NMatrix-MRI for other functionalities of a two dimensional matrix, like addition, subtraction, trigonometic operations, etc.
+1. For, two dimensional matrices, NMatrix-JRuby is currently slower than NMatrix-MRI for matrix multiplication and matrix decomposition functionalities(calculating determinant and factorizing a matrix). NMatrix-JRuby is faster than NMatrix-MRI for other functionalities of a two dimensional matrix like addition, subtraction, trigonometic operations, etc.
 
-2. NMatrix-JRuby is a clear winner when we are working with matrices of arbitrary dimension.
+2. NMatrix-JRuby is a clear winner when we are working with matrices of arbitrary dimensions.
 
 
 ## **Storing n-dimensional matrices as flat arrays**
 
 The major components of NMatrix are shape, elements, dtype and stype. Any nmatrix when initialised, stores the elements as a flat array. ArrayRealVector class is used to store the elements.
 
-@s stores elements, @shape stores the shape of array, while @dtype and @stype store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented for only double matrices.
+@s stores elements, @shape stores the shape of array, while @dtype and @stype store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented only for double and Ruby object data type.
 
 
-NMatrix-MRI uses @s which is an object containing elements, stride, offset (as in C, we need to deal with the memory allocation for the arrays).
+NMatrix-MRI uses @s which is an object containing elements, stride and offset (as in C, we need to deal with the memory allocation for the arrays).
 
 ![NMatrix](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/nmatrix.png?raw=true "Fig.1. NMatrix")
 
@@ -70,7 +70,7 @@ def get_stride(nmatrix)
 end
 ```
 
-*NMatrix#[]* and *NMatrix#[]=* are thus able to read and write the elements of a matrix. NMatrix#MRI uses the @s object which stores the stride when the nmatrix is initialised.
+*NMatrix#[]* and *NMatrix#[]=* are thus able to read and write the elements of a matrix. NMatrix#MRI uses the @s object which stores the stride when the nmatrix is initialized.
 
 *NMatrix#[]* calls the *#xslice* operator which calls  *#get_slice* operator that use the stride to determine whether we are accessing a single element or multiple elements. If  there are multiple elements, *#dense_storage_get* returns an NMatrix object with the elements along the dimension.
 
@@ -102,7 +102,8 @@ def xslice(args)
 end
 ```
 
-*NMatrix#[]=* calls the *#dense_storage_set* operator which calls *#get_slice* operator that use the stride to find out whether we are accessing a single element or multiple elements. If there are multiple elements *#set_slice* recursively sets the elements of the matrix then returns an NMatrix object with the elements along the dimension.
+*NMatrix#[]=* calls the *#dense_storage_set* operator which calls *#get_slice* operator that use the stride to find out whether we are accessing a single element or multiple elements. If there are multiple
+ elements *#set_slice* recursively sets the elements of the matrix then returns an NMatrix object with the elements along the dimension.
 
 ```ruby
 def dense_storage_set(slice, right)
@@ -190,9 +191,9 @@ def each_with_indices
 Linear algebra is mostly about two-dimensional matrices. In NMatrix, when performing calculations in a two-dimensional matrix, a flat array is converted to a two-dimensional matrix. A two-dimensional matrix is stored as a BlockRealMatix or Array2DRowRealMatrix.
 **Each of them has its own advantages.**
 
-**Getting a two-d-matrix**
+**Getting a 2D-matrix**
 
-![Alt Getting a two-d-matrix](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/matrixGenerate.png?raw=true "Fig.2. Getting a two-d-matrix")
+![Alt Getting a 2D-matrix](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/matrixGenerate.png?raw=true "Fig.2. Getting a 2D-matrix")
 
 ```java
 public class MatrixGenerator
@@ -211,7 +212,7 @@ public class MatrixGenerator
 }
 ```
 
-**Flat a two-d matrix**
+**Flat a 2D-matrix**
 
 ```java
 public class ArrayGenerator
@@ -232,15 +233,15 @@ public class ArrayGenerator
 
 **Why use Java method instead of Ruby method?**
 
-1. Memory Usage and Garbage Collection => A scientific library is memory intensive and hence, every step counts.
+1. Memory Usage and Garbage Collection: A scientific library is memory intensive and hence, every step counts.
  JRuby interpreter doesn't need to dynamically guess the data type and uses less memory, i.e around one-tenth of it. If the memory is properly utilized; when the GC kicks in, it has to clear less used memory space and improves the speed.
 
-2. Speed => Using java method greatly improves the speed around 1000 times, when compared to using ruby method.
+2. Speed: Using java method greatly improves the speed; around 1000 times, when compared to using ruby method.
 
 
 ## **Operators**
 
-All the operators from NMatrix-MRI have been implemented except moduli. The binary operators were easily implemented through Commons Math API.
+All the operators from NMatrix-MRI have been implemented except moduli. The binary operators were easily implemented through Commons Math API and Java Math API.
 
 ```ruby
 def +(other)
@@ -272,7 +273,7 @@ def sin
 end
 ```
 
-NMatrix#method(arg) has been implemented using Bivariate functions provided by Commons-Maths API and Java Maths library API.
+NMatrix#method(arg) has been implemented using Bivariate functions provided by Commons-Maths API and Java Maths API.
 
 ```ruby
 def gamma
@@ -302,7 +303,7 @@ public class MathHelper{
 
 NMatrix-MRI relies on LAPACK and ATLAS for matrix decomposition and solving functionalities. Apache Commons Math provides a different set of API for decomposing a matrix and solving an equation. For example, *#potrf* and other LAPACK specific functions have not been implemented as they are not required at all.
 
-Calculating determinant in NMatrix is tricky where a matrix is reduced either to a Lower or Upper matrix and the Diagonal elements of the matrix are multiplied to get the result. Also, the correct sign of the result whether positive or negative is taken into account, while calculating the determinant. However, NMatrix-JRuby uses Commons Math API to calculate the determinant.
+Calculating determinant in NMatrix is tricky where a matrix is reduced either to a Lower or Upper matrix and the Diagonal elements of the matrix are multiplied to get the result. Also, the correct sign of the result (whether positive or negative) is taken into account while calculating the determinant. However, NMatrix-JRuby uses Commons Math API to calculate the determinant.
 
 ```ruby
 def det_exact
@@ -416,10 +417,10 @@ The solve method currently uses LUDecomposition and Cholesky Decomposition for s
 
 **NMatrix#matrix_solve**
 
-Given we need to solved a system of linear equations
+Given, we need to solve a system of linear equations:
 
                         AX = B
-where A is an m×n matrix, B and X are n×p matrices, we needed to solve this equation by iterating through B.
+where A is an m×n matrix, B and X are n×p matrices, we need to solve this equation by iterating through B.
 
 NMatrix-MRI implements this functionality using *NMatrix::BLAS::cblas_trsm* method. However, for NMatrix-JRuby,  *NMatrix#matrix_solve* is the analogous method used.
 
@@ -449,12 +450,12 @@ Currently, Hessenberg transformation for NMatix-JRuby has not been implemented.
 
 ## **Other dtypes**
 
-We have tried implementing float dtypes using jblas FloatMatrix.  jblas was used instead of Commons Math as the latter uses Field Elements for Floats and it had some issues with Reflection and TypeErasure. However, it resulted errors due to precision.
+We have tried implementing float dtypes using jblas FloatMatrix.  jblas was used instead of Commons Math as the latter uses Field Elements for Floats and it had some issues with Reflection and TypeErasure. However, it resulted in errors due to precision.
 
 
 ## **Code Organisation and Deployment**
 
-To minimise conflict with the MRI codebase all the ruby code has been placed in */lib/nmatrix/jruby* directory. */lib/nmatrix/nmatrix.rb* decides whether to load *nmatrix.so* or *nmatrix_jruby.rb* after detecting the Ruby Platform.
+To minimise conflict with the MRI codebase all the jruby front end code has been placed in */lib/nmatrix/jruby* directory. */lib/nmatrix/nmatrix.rb* decides whether to load *nmatrix.so* or *nmatrix_jruby.rb* after detecting the Ruby Platform.
 
 The added advantage is that the ruby interpreter must not decide which function to call at run-time. The impact on performance can be seen when programs which intensively use NMatrix for linear algebraic computations(e.g. mixed-models) are run.
 
@@ -506,7 +507,7 @@ Why some tests fail?
 
 NMatrix on JRuby offers comparable speeds to MRI. For specific computations it will be possible to leverage the treading support of JRuby and speed up things using multiple cores.
 
-Adding new functionality to NMatrix/JRuby will be easy from here. Personally I am interested to add OpenCL support to leverage the GPU computational capacity available on most machines today.
+Adding new functionality to NMatrix-JRuby will be easy from here. Personally I am interested to add OpenCL support to leverage the GPU computational capacity available on most machines today.
 
 ## **Conclusion**
 The main goal of this project was to bring  **Scientific Computation to JRuby**, to gain from the performance JRuby offers.
