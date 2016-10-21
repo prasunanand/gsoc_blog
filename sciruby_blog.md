@@ -45,7 +45,7 @@ Note:
 
 The major components of NMatrix are shape, elements, dtype and stype. Any nmatrix when initialised, stores the elements as a flat array. ArrayRealVector class is used to store the elements.
 
-@s stores elements, @shape stores the shape of array, while @dtype and @stype store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented only for double and Ruby object data type.
+@s stores elements, @shape stores the shape of the NMatrix, while @dtype and @stype store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented only for double and Ruby object data type.
 
 
 NMatrix-MRI uses @s which is an object containing elements, stride and offset (as in C, we need to deal with the memory allocation for the arrays).
@@ -186,7 +186,7 @@ def each_with_indices
  end
 ```
 
-## **Two Dimensional Matrices**
+## **Two-Dimensional Matrices**
 
 Linear algebra is mostly about two-dimensional matrices. In NMatrix, when performing calculations in a two-dimensional matrix, a flat array is converted to a two-dimensional matrix. A two-dimensional matrix is stored as a BlockRealMatix or Array2DRowRealMatrix.
 **Each of them has its own advantages.**
@@ -507,7 +507,7 @@ Why some tests fail?
 
 NMatrix on JRuby offers comparable speeds to MRI. For specific computations it will be possible to leverage the threading support of JRuby and speed up things using multiple cores.
 
-Adding new functionality to NMatrix-JRuby will be easy from here. Personally I am interested to add OpenCL support to leverage the GPU computational capacity available on most machines today.
+Adding new functionality to NMatrix-JRuby will be easy from here. Personally, I am interested to add OpenCL support to leverage the GPU computational capacity available on most machines today.
 
 ## **Conclusion**
 The main goal of this project was to bring  **Scientific Computation to JRuby**, to gain from the performance JRuby offers.
