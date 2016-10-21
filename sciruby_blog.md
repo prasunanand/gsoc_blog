@@ -1,16 +1,16 @@
 ## **Introduction**
 
-I worked on "Port NMatrix to JRuby" for my GSoC 2016 project. I am pleased to announce that **JRuby is ready for Nmatrix users**.
+I worked on "Port NMatrix to JRuby" in the context of the Google Summer of Code (GSoC) 2016 and I am pleased to announce that **Nmatrix can now be used in JRuby**.
 
-NMatrix, a linear algebra library wraps Apache Commons Maths for its core functionalities. By the end of GSoC, I have been able to implement NMatrix for dense matrices for double and object ( ruby objects ) data type. 
+With JRuby NMatrix, a linear algebra library, wraps Apache Commons Maths for its core functionalities. NMatrix supports dense matrices for double and a Ruby object data type. The performance of JRuby with Apache Commons Maths is outstanding (see below for performance comparisons) even without making use of JRuby threading capabilities.
 
-I have also worked on porting [mixed-models](https://github.com/agisga/mixed_models) gem to JRuby which uses NMatrix heavily at its core to test NMatrix-JRuby with real-life data.
+I have also ported the [mixed-models](https://github.com/agisga/mixed_models) gem to JRuby which uses NMatrix heavily at its core. This allowed us to test NMatrix-JRuby with real-life data.
 
 This blog post summarizes my work on the project with Sciruby, and reports the final status of the project.
 
-## **Proposal**
+## **GSoC application**
 
-The proposal application can be found [here](https://github.com/prasunanand/resume/blob/master/gsoc2016_application.md).
+The original GSoC proposal, plan and application can be found [here](https://github.com/prasunanand/resume/blob/master/gsoc2016_application.md).
 
 ## **Code Commits**
 
@@ -18,9 +18,9 @@ The proposal application can be found [here](https://github.com/prasunanand/resu
 
 ## **Storing n-dimensional matrices as flat arrays**
 
-The major components of a NMatrix is its shape, elements, dtype and stype. Any nmatrix when initialised, stores the elements as a flat array. ArrayRealVector class is used to store the elements.
+The major components of NMatrix are shape, elements, dtype and stype. Any nmatrix when initialised, stores the elements as a flat array. ArrayRealVector class is used to store the elements.
 
-@s stores the elements, @shape stores the shape of array, while @dtype and @stype store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented for only double matrices.
+@s stores elements, @shape stores the shape of array, while @dtype and @stype store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented for only double matrices.
 
 
 NMatrix-MRI uses @s which is an object containing elements, stride, offset (as in C, we need to deal with the memory allocation for the arrays).
@@ -162,7 +162,7 @@ def each_with_indices
 
 ## **Two Dimensional Matrices**
 
-Linear algebra is mostly about two-dimensional matrices. In NMatrix, when performing calculations in a two-dimensional matrix, a flat array is converted to a two-dimensional matrix. A two-dimensional matrix is stored as a BlockRealMatix or Array2DRowRealMatrix. 
+Linear algebra is mostly about two-dimensional matrices. In NMatrix, when performing calculations in a two-dimensional matrix, a flat array is converted to a two-dimensional matrix. A two-dimensional matrix is stored as a BlockRealMatix or Array2DRowRealMatrix.
 **Each of them has its own advantages.**
 
 **Getting a two-d-matrix**
@@ -458,7 +458,7 @@ Note:
 
 ## **Test Report**
 
-After the port; this is the final report that summarizes the number of tests that successfully pass: 
+After the port; this is the final report that summarizes the number of tests that successfully pass:
 
 **NMatrix**
 
@@ -500,7 +500,11 @@ Why some tests fail?
 <br>
 
 
+## **Future work**
 
+NMatrix on JRuby offers comparable speeds to MRI. For specific computations it will be possible to leverage the treading support of JRuby and speed up things using multiple cores.
+
+Adding new functionality to NMatrix/JRuby will be easy from here. Personally I am interested to add OpenCL support to leverage the GPU computational capacity available on most machines today.
 
 ## **Conclusion**
 The main goal of this project was to bring  **Scientific Computation to JRuby**, to gain from the performance JRuby offers.
