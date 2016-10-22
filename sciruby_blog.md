@@ -43,7 +43,7 @@ Note:
 
 ## **Storing n-dimensional matrices as flat arrays**
 
-The major components of NMatrix are shape, elements, dtype and stype. Any nmatrix when initialised, stores the elements as a flat array. ArrayRealVector class is used to store the elements.
+The major components of NMatrix are shape, elements, dtype and stype. Any nmatrix when initialized, stores the elements as a flat array. ArrayRealVector class is used to store the elements.
 
 @s stores elements, @shape stores the shape of the NMatrix, while @dtype and @stype store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented only for double and Ruby object data type.
 
