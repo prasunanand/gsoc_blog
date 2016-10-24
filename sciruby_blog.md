@@ -55,7 +55,7 @@ NMatrix-MRI uses @s which is an object containing elements, stride and offset (a
 ## **Slicing and Rank**
 
 Implementing slicing was the toughest part of NMatrix-JRuby implementation.
-*NMatrix@s* stores the elements of a matrix as a flat_array. The elements along any dimension are accessed with the help of the stride. *NMatrix#get_stride* calculates the stride with the help of the dimension and shape and returns an array.
+`NMatrix@s` stores the elements of a matrix as a flat_array. The elements along any dimension are accessed with the help of the stride. `NMatrix#get_stride` calculates the stride with the help of the dimension and shape and returns an array.
 
 ```ruby
 def get_stride(nmatrix)
