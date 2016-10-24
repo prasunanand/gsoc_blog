@@ -454,7 +454,7 @@ We have tried implementing float dtypes using jblas FloatMatrix.  jblas was used
 
 ## **Code Organisation and Deployment**
 
-To minimise conflict with the MRI codebase all the jruby front end code has been placed in */lib/nmatrix/jruby* directory. */lib/nmatrix/nmatrix.rb* decides whether to load *nmatrix.so* or *nmatrix_jruby.rb* after detecting the Ruby Platform.
+To minimise conflict with the MRI codebase all the jruby front end code has been placed in `/lib/nmatrix/jruby` directory. `lib/nmatrix/nmatrix.rb` decides whether to load `nmatrix.so` or `nmatrix_jruby.rb` after detecting the Ruby Platform.
 
 The added advantage is that the ruby interpreter must not decide which function to call at run-time. The impact on performance can be seen when programs which intensively use NMatrix for linear algebraic computations(e.g. mixed-models) are run.
 
