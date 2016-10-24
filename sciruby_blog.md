@@ -45,10 +45,10 @@ Note:
 
 The major components of NMatrix are shape, elements, dtype and stype. Any nmatrix when initialized, stores the elements as a flat array. ArrayRealVector class is used to store the elements.
 
-@s stores elements, @shape stores the shape of the NMatrix, while @dtype and @stype store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented only for double and Ruby object data type.
+`@s` stores elements, `@shape` stores the shape of the NMatrix, while `@dtype` and `@stype` store the data type and storage type respectively. Currently, we have nmatrix-jruby implemented only for double and Ruby object data type.
 
 
-NMatrix-MRI uses @s which is an object containing elements, stride and offset (as in C, we need to deal with the memory allocation for the arrays).
+NMatrix-MRI uses `@s` which is an object containing elements, stride and offset (as in C, we need to deal with the memory allocation for the arrays).
 
 ![NMatrix](https://github.com/prasunanand/gsoc_blog/blob/master/img/sciruby_blog/nmatrix.png?raw=true "Fig.1. NMatrix")
 
@@ -70,9 +70,9 @@ def get_stride(nmatrix)
 end
 ```
 
-*NMatrix#[]* and *NMatrix#[]=* are thus able to read and write the elements of a matrix. NMatrix#MRI uses the @s object which stores the stride when the nmatrix is initialized.
+`NMatrix#[]` and `NMatrix#[]=` are thus able to read and write the elements of a matrix. NMatrix#MRI uses the @s object which stores the stride when the nmatrix is initialized.
 
-*NMatrix#[]* calls the *#xslice* operator which calls  *#get_slice* operator that use the stride to determine whether we are accessing a single element or multiple elements. If  there are multiple elements, *#dense_storage_get* returns an NMatrix object with the elements along the dimension.
+`NMatrix#[]` calls the `#xslice` operator which calls  `#get_slice` operator that use the stride to determine whether we are accessing a single element or multiple elements. If  there are multiple elements, `#dense_storage_get` returns an NMatrix object with the elements along the dimension.
 
 NMatrix-MRI differs from NMatrix-JRuby implementation as it makes sure that memory is properly utilized as the memory needs to be properly **garbage collected**.
 
@@ -102,8 +102,8 @@ def xslice(args)
 end
 ```
 
-*NMatrix#[]=* calls the *#dense_storage_set* operator which calls *#get_slice* operator that use the stride to find out whether we are accessing a single element or multiple elements. If there are multiple
- elements *#set_slice* recursively sets the elements of the matrix then returns an NMatrix object with the elements along the dimension.
+`NMatrix#[]=` calls the `#dense_storage_set` operator which calls `#get_slice` operator that use the stride to find out whether we are accessing a single element or multiple elements. If there are multiple
+ elements `#set_slice` recursively sets the elements of the matrix then returns an NMatrix object with the elements along the dimension.
 
 ```ruby
 def dense_storage_set(slice, right)
@@ -152,8 +152,7 @@ def dense_storage_set(slice, right)
 
 ## **Enumerators**
 
-NMatrix-MRI uses the C code for enumerating the elements of a matrix. However, the NMatrix-JRuby uses pure Ruby code. Currently, all the enumerators for dense matrices with real data-type have been implemented and they are properly functional.
-  Enumerators for objects have not been currently implemented.
+NMatrix-MRI uses the C code for enumerating the elements of a matrix. However, the NMatrix-JRuby uses pure Ruby code. Currently, all the enumerators for dense matrices with real data-type have been implemented and they are properly functional. Enumerators for objects have not been currently implemented.
 
 ```ruby
 def each_with_indices
@@ -263,7 +262,7 @@ def +(other)
 end
 ```
 
-Trigonometric, Exponentiation and Log operators with a singular argument i.e. matrix elements have been implemented using *#mapToSelf* method that takes Univariate function as an argument. *#mapToSelf* maps every element of ArrayRealVector object to the Univariate operator, which is passed to it and returns *self* object.
+Trigonometric, Exponentiation and Log operators with a singular argument i.e. matrix elements have been implemented using `#mapToSelf` method that takes Univariate function as an argument. `#mapToSelf` maps every element of ArrayRealVector object to the Univariate operator, which is passed to it and returns `self` object.
 
 ```ruby
 def sin
@@ -301,7 +300,7 @@ public class MathHelper{
 
 ## **Decomposition**
 
-NMatrix-MRI relies on LAPACK and ATLAS for matrix decomposition and solving functionalities. Apache Commons Math provides a different set of API for decomposing a matrix and solving an equation. For example, *#potrf* and other LAPACK specific functions have not been implemented as they are not required at all.
+NMatrix-MRI relies on LAPACK and ATLAS for matrix decomposition and solving functionalities. Apache Commons Math provides a different set of API for decomposing a matrix and solving an equation. For example, `#potrf` and other LAPACK specific functions have not been implemented as they are not required at all.
 
 Calculating determinant in NMatrix is tricky where a matrix is reduced either to a Lower or Upper matrix and the Diagonal elements of the matrix are multiplied to get the result. Also, the correct sign of the result (whether positive or negative) is taken into account while calculating the determinant. However, NMatrix-JRuby uses Commons Math API to calculate the determinant.
 
@@ -422,7 +421,7 @@ Given, we need to solve a system of linear equations:
                         AX = B
 where A is an m×n matrix, B and X are n×p matrices, we need to solve this equation by iterating through B.
 
-NMatrix-MRI implements this functionality using *NMatrix::BLAS::cblas_trsm* method. However, for NMatrix-JRuby,  *NMatrix#matrix_solve* is the analogous method used.
+NMatrix-MRI implements this functionality using `NMatrix::BLAS::cblas_trsm` method. However, for NMatrix-JRuby,  `NMatrix#matrix_solve` is the analogous method used.
 
 ```ruby
   def matrix_solve rhs
